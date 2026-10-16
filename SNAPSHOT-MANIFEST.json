@@ -1,0 +1,1231 @@
+{
+  "snapshot": "Ventro Resto source-only public snapshot",
+  "prepared": "2026-10",
+  "authorized_candidate_entries_checked": 275,
+  "files_listed_excluding_this_manifest": 243,
+  "files": [
+    {
+      "path": ".dockerignore",
+      "sha256": "d19a6de6902d73732ac527e5f1d5304d56e71527a202386f153e4c54c7506045",
+      "size": 161
+    },
+    {
+      "path": ".env.example",
+      "sha256": "1c0153a29f8c540bd5559a1300f7b15f8e7a15ed5328850c60ae15cba2704c2c",
+      "size": 1098
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "92741d8cb33033486701b7cdd165e17b92c66e874146dc339942bd8691d31a03",
+      "size": 328
+    },
+    {
+      "path": "Dockerfile",
+      "sha256": "5a18657228ddfba840ebe775782fb6e225bd3d36f159f8d73ca464389fd54c9d",
+      "size": 301
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "5d18395182be275b5525f5ba40bc7a6d9c791df854043bdc9bce9ab6b2c6cfe5",
+      "size": 1269
+    },
+    {
+      "path": "README.md",
+      "sha256": "565eb5a621865372fb9b34407dba3b99c7ba9cf89ff77b272ffb209ea18ff22f",
+      "size": 5480
+    },
+    {
+      "path": "docker-compose.yml",
+      "sha256": "9f0de9f4e5580e8df186148b6fd4a34a6bfab4f0b1e1a62812ed484f66eb0a86",
+      "size": 1663
+    },
+    {
+      "path": "docs/AI_GENERATED_ASSETS.md",
+      "sha256": "37def6e546c063619f9d6f54daa72d1e7ae0615a958829dc61327cd7a5c5b228",
+      "size": 1188
+    },
+    {
+      "path": "docs/PUBLICATION_LIMITATIONS.md",
+      "sha256": "6c76d27b50e66fa59b49fe32f3e486f3d4a479db697cf862b26bece9e80c6d3e",
+      "size": 1578
+    },
+    {
+      "path": "docs/THIRD_PARTY_NOTICES.md",
+      "sha256": "e2dcb194ea635bd1649a541c2331ff690d838a0e52ec99287a28385c0d7a1fef",
+      "size": 3414
+    },
+    {
+      "path": "pom.xml",
+      "sha256": "478244d0b0daf888faa4bf73c7ea7e32f778dffd8628cc97b38255ea7d3fabd6",
+      "size": 4225
+    },
+    {
+      "path": "scripts/pos-client-smoke.py",
+      "sha256": "2851e123e47918263cb0bb057e087267eb28b3b53c7cf9031773e4d859f08b2b",
+      "size": 17420
+    },
+    {
+      "path": "scripts/receipt-reversal-client-smoke.js",
+      "sha256": "e6245b66d1b996713322d51a94f2130564dccf7f4fcd4f1bb9c72ea6062893c1",
+      "size": 4630
+    },
+    {
+      "path": "scripts/security-rendering-smoke.py",
+      "sha256": "31f724a6a0f163169f6ba4799d25531258034954c4c4077a35e41d5975eeb52b",
+      "size": 5790
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/RestauranteApplication.java",
+      "sha256": "1228bf311f3956aff33d47f99a03b15a721fca2ee32ad6b04ed0f6f95faae05c",
+      "size": 527
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/config/ActiveUserFilter.java",
+      "sha256": "e4691a571d18716c136e20a9e85d334a27dea72cd5a05579041180756c99f221",
+      "size": 2413
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/config/AppConfig.java",
+      "sha256": "7d2c5593408db432b64f94e84038f3fe58e58f45507a9ea4ef2347e33a07badb",
+      "size": 1887
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/config/DeploymentIdentity.java",
+      "sha256": "7897e594c072bb2dc7722117cec06401a2af9b58785b419b2662527a1b521fcb",
+      "size": 3262
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/config/DeploymentStorage.java",
+      "sha256": "95e23e4d3f07e370ae1fb9a1361f2ceeb9e2be80427efb4d45d3cee1d1a1c543",
+      "size": 834
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/config/LegacySchemaCompatibility.java",
+      "sha256": "1a086e8020538d3a4bead86d810bd9662a617bbd726b4b3c669e0d899151afe4",
+      "size": 3819
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/config/SaaSPlanInterceptor.java",
+      "sha256": "82fe59096bf523f70ef4f52cb986e598d30b80e60ef5918e58dae32a795aedce",
+      "size": 3603
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/config/SchemaMigrationConfig.java",
+      "sha256": "3408d671ab9eb93f8f38c4599ee448ad495fc70b875659f40426f6044b21ad38",
+      "size": 1996
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/config/SecurityConfig.java",
+      "sha256": "e904e9ccc136a8b0bedbae7119f01d26c5948777fd7386f524f8a2da5851da2d",
+      "size": 6592
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/AsistenciaController.java",
+      "sha256": "e0ee96590a0f796aa2ac04466ac84521b2b8871a83c0e4ed5c63407a1ffd5bb4",
+      "size": 2111
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/AuthController.java",
+      "sha256": "ac9a2bb77e0a70ef7fda6b59986c275d8103fcc17c2d870dadbc6e7ec7244dcf",
+      "size": 937
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/CategoriaController.java",
+      "sha256": "ea2fb401a6751688e0099d8924dbf59133e23078995ebb4bae519a7fe64d5021",
+      "size": 5274
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/ChatbotController.java",
+      "sha256": "796e0a04b987fb5dc532d42aa81763aaec592e3ac5ffd00971141909a701089b",
+      "size": 12696
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/ClienteController.java",
+      "sha256": "81cc9fced95358b8f027ab5eb0685d057a20d20b6fa1ff6957536b638ff286c2",
+      "size": 6172
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/ConfiguracionController.java",
+      "sha256": "e353129cf78ce1f270e0c2303a21cafa349b63bb9c11b45b6754766b702b7525",
+      "size": 1711
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/CorteCajaController.java",
+      "sha256": "7a7430b04137f15d4bb76bb840d88885cb03b0d6e1fe0106b50f92764a146c42",
+      "size": 9343
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/DashboardController.java",
+      "sha256": "727dcebed1bf177717afaf9765e46a540658bc3aafe7ffb7dcabb756a54b503d",
+      "size": 8717
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/GastoController.java",
+      "sha256": "7c4612f8100c63a2994dc305787d592525140cf7208741ad704c590439cef8f4",
+      "size": 2689
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/GlobalControllerAdvice.java",
+      "sha256": "41b99c867dd2adc0d8c78800a1e0057770ff4f4832460f9379ffdeb40924e81e",
+      "size": 1038
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/InsumoController.java",
+      "sha256": "1cb19e8a1c932868bf6ae48a38999bba63ee7c28d2d2c2760d2baefe7e97b619",
+      "size": 4722
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/InventoryReceiptController.java",
+      "sha256": "d18111a4ab4701f671eab31efd970b24689a736f462d9e2f6529d2996d0ec455",
+      "size": 11338
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/KdsController.java",
+      "sha256": "93e707103248763be82d8cd8d576f219ada957b8ee3b356ffe824435c688e1b7",
+      "size": 4593
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/MenuWebController.java",
+      "sha256": "66fd366f0493f75a738f8a400115381d21f3558497639de60e8e547b6d9a9cb2",
+      "size": 2593
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/MesaController.java",
+      "sha256": "b0520f6260e7c9e632e32599e19d9b9013f80fd1a30595aecbbf5c25e97333b1",
+      "size": 14474
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/MovimientoInventarioController.java",
+      "sha256": "bce44879df87cc52ff3d575487007945fef2118ce255342f7df29444ec0b3437",
+      "size": 6113
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/PredictiveController.java",
+      "sha256": "6016e56e17a3f95546d28424c9b24ef9e038dd2a2747f712b9fb0e0c40efcbd1",
+      "size": 3128
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/ProductoController.java",
+      "sha256": "9784fa551b2ff842cfe762b576980ccb11cf1aa94fc0a621e0ddfe96811e051c",
+      "size": 7264
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/ProveedorController.java",
+      "sha256": "cc12562af4eb595e9bca926d0865cd9cc68a9a2cd8446eed4fa896feb172da81",
+      "size": 4411
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/RecetaController.java",
+      "sha256": "c0364a6b0736f8b3ad5b466723c0b792539307526dea6a038ae388c51a685696",
+      "size": 3629
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/ReporteController.java",
+      "sha256": "c24e96bb5c7046c3b1f4e9f612c9917302d8f584b825a4c909102bebd86d25ad",
+      "size": 5259
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/ReservaController.java",
+      "sha256": "b4c84890e2ffa0d9bc54cc234a770499848b42f6b789b9b58c51720dfcb4c70b",
+      "size": 6391
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/SubRecetaController.java",
+      "sha256": "65b0121d29a8f461bb734392b11c08d58648b532a87ee5244228d581bfa57fe0",
+      "size": 7494
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/UsuarioController.java",
+      "sha256": "615722a2da2dad5cf8277b329f4148f08e7938eaf3502c2c3b9a8a721a6b3314",
+      "size": 6064
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/controllers/VentaController.java",
+      "sha256": "d7cd77ddf13ad64743e59753a56250818f1641d61c841467a0023ae66e656011",
+      "size": 7549
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/dto/ConfiguracionUpdate.java",
+      "sha256": "bcdff9129962988a9adf7cb3731ff0948b7a980917270ff77726b00638b24006",
+      "size": 5487
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/dto/CreateUsuarioRequest.java",
+      "sha256": "886582bcb885291a62b2a325110d05a11466b11b020840c335f9bdc1107a9b6d",
+      "size": 1377
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/BaseQuantity.java",
+      "sha256": "428aeeebeb13b9d9a8dd5f5b904d7c80401a1829cd25d48d56f24d0e86ce88bb",
+      "size": 383
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/BaseUnit.java",
+      "sha256": "fcbedd7e08c8d3ba94dcfda9d3f1e01cb6d13502ab8870529de71f7753693b2e",
+      "size": 775
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/Inventory5AStatus.java",
+      "sha256": "1f8c07e9457ef638b6f4684ed98780086e265fda57a4ca3174f76b45ce151f66",
+      "size": 123
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/InventoryActivationService.java",
+      "sha256": "637fc1c7aa63eb48e2cde3f33b8aa80ad33bf924b08fe10d3f63eae60cd85b7e",
+      "size": 10145
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/InventoryChangeApplier.java",
+      "sha256": "3d257f165babdcbc2fff4e5d9df2d7af3344bd8c4fae522eff17b238a25b2244",
+      "size": 9802
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/InventoryNumbers.java",
+      "sha256": "0501fac1d574549134fe4b312f35d6133c7f0ae1e494c45f6c0e8f63f73ce0e4",
+      "size": 2050
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/InventoryPermissionService.java",
+      "sha256": "4383c9bc7e1037d07611882f20b61d2f94496502660367398e9949a81b1c0388",
+      "size": 1641
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/InventoryReconciliationFingerprint.java",
+      "sha256": "0bef8ee84c36933e2f7ebaf733bad392b5331472e3845b180b38fa78c4ea46b1",
+      "size": 2314
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/InventoryReconciliationService.java",
+      "sha256": "d314e5203f678e8b61c12b1216767789b5365709af4093c7a235a3a6e46f838e",
+      "size": 9765
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/InventoryWritePolicy.java",
+      "sha256": "4a5ffa1ad2500b373d91941495b08735fa1f8df61383c35d897f153dd2d3d37e",
+      "size": 1035
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/LegacyInventoryClassifier.java",
+      "sha256": "92515b252eb320642f34b818c303fdd3657b87153c942fa25ee55ff33f0a7027",
+      "size": 10316
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/PurchasePresentationService.java",
+      "sha256": "1bce344fc1e0a4a585f978b6329f4c130ad1f801b9e19d7212f906475c72ab0e",
+      "size": 4475
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/ReceiptException.java",
+      "sha256": "50d3c558c42204bf2f3bb240c93576424cf84677e8297ecb53b16ed1d5e3cdf1",
+      "size": 444
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/ReceiptFingerprint.java",
+      "sha256": "b968939f292669f4dcf492e46c4f5db9cab647c755319ae5fafcca04c0ba3ad9",
+      "size": 2059
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/ReceiptNumbers.java",
+      "sha256": "8ae3a870b1a545c05621d53084b0563338cc388a761409ab2788172dec25de1d",
+      "size": 1209
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/ReceiptQueryService.java",
+      "sha256": "2a8fdf74cfe61b10560bdea5f192af3497cf6b0e9ad27bb9d597eb6bd14581fb",
+      "size": 7083
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/ReceiptReversalException.java",
+      "sha256": "c78bbf9d6f5e4855aaa43376f52aa4f3abead3f09c26941cb6d629c0cf807518",
+      "size": 473
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/ReceiptReversalFingerprint.java",
+      "sha256": "0ca73b72e4573c24ad09cc0704938baeeda92c9ebb9ff967f349c30dc1e9d21b",
+      "size": 1103
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/ReceiptReversalService.java",
+      "sha256": "7876e2094a5af847bbd71cec21b4d8f97d1114db8090b23a82629d6978486d1d",
+      "size": 10258
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/ReceiptService.java",
+      "sha256": "1c0e116b68f2bdd0223b5443cfb9e2959ec55f5dc8e500b94386aa77e9265db5",
+      "size": 12316
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/UnitConversion.java",
+      "sha256": "a417c1be46b7d548d0a2e73afec00c421abea049595d797091d0935e87608236",
+      "size": 1137
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/inventory/UnitFamily.java",
+      "sha256": "b21a8ef851a84db17cec0645681ac61a57662c2c1b342fd03831716c73de801f",
+      "size": 101
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/Asistencia.java",
+      "sha256": "6d1ab87a76f24b2c412905f89bfcbe6753f44794bcbc68856010bfd60dafe514",
+      "size": 1914
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/Auditoria.java",
+      "sha256": "3d65a307e4486248738deca76a6793957dc3f8228274d163b5094e23ec6c1935",
+      "size": 1671
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/Categoria.java",
+      "sha256": "4f3de26866c894094ec0a79aeefeb69b3111f40a0478bf66eb6da59e44371723",
+      "size": 1687
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/Cliente.java",
+      "sha256": "e3ea9aae1617a1279d9b2d43c636957bf500085d8a46da3542214a17809f4647",
+      "size": 3467
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/ConfiguracionSistema.java",
+      "sha256": "3e293b7b7fe5da8e69bd9ca02f119525ed63f4e512895df3969343d71a7c5b90",
+      "size": 7638
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/CorteCaja.java",
+      "sha256": "22d71e69747aa7e45890b0286404899caa1af5b048abd483fd4865268e9a426f",
+      "size": 3217
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/DetalleVenta.java",
+      "sha256": "cea4927b534d267e11fe2b8945be0a3dbf27ee145ae0550270b960a918ec5aba",
+      "size": 2096
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/Gasto.java",
+      "sha256": "cf5cbafd6493c5c88e0249ef31a5c94e40a31a2c702972d7b6365bf3ddd330a7",
+      "size": 1653
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/Insumo.java",
+      "sha256": "186bc7a6ba68e2a95386ec43444a48abb87cac9fc977f967054a5e1255433255",
+      "size": 4607
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/InventarioReconciliacion.java",
+      "sha256": "cc80d40b752417e5155f5bd6799b5d20aea94099f203dd8f51a8d46ca1518f10",
+      "size": 5092
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/InventoryPurchasePresentation.java",
+      "sha256": "4c3917ef92f1d002f7408dabc28dab8dff1d766c311f51a9c27592c701691fe6",
+      "size": 3677
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/InventoryReceipt.java",
+      "sha256": "4155d959982ba008919b3ac5b195207b0c6f65ebb1b91c26d92d040df116d9a9",
+      "size": 3974
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/InventoryReceiptLine.java",
+      "sha256": "3e7f005424cc0271bf5edcf045ee66f3a33bd0406475ad76516307fb30162c6c",
+      "size": 5931
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/InventoryReceiptReversal.java",
+      "sha256": "0ec02598545468855bd447d070d8e54b9e2cac8fcbed0ac8294ee7aa084c84da",
+      "size": 3152
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/InventoryReceiptReversalLine.java",
+      "sha256": "53ddec6e207e6ef7d15f2aa9bc45dde86a3698a9f76aa4746fb20ca101e3def8",
+      "size": 2293
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/Mesa.java",
+      "sha256": "154d6b9ba7767407fb89489504ffeba56468abd10efbcc081e3761f530a31ea2",
+      "size": 1977
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/MovimientoInventario.java",
+      "sha256": "f243ba3d2c617794ff8ee96472f1250865a8f3928aee4e610b3cbb19c128287f",
+      "size": 3435
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/Producto.java",
+      "sha256": "8b89bad7a553d9e530d9c1ce6c830c4b6a0774d3e5630f5a03ed7eac02b01433",
+      "size": 3727
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/Proveedor.java",
+      "sha256": "9f66046adc0c4daf6de6f0739eccaf46fd590ca61194e840e17530ff48f1ea97",
+      "size": 2338
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/Receta.java",
+      "sha256": "e17a04da625187932581b950a3853e7be79b66a9ce6673d053975cbccf5675c4",
+      "size": 1305
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/Reserva.java",
+      "sha256": "4515c8cee131cec3c9217aeaa526ed395b85ecf53d37fd81f3c11b56529b8a04",
+      "size": 3604
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/SubReceta.java",
+      "sha256": "7fcba2d70eaafeb069029c2c4beea0a4ea24e4f7eb1b296ecf850a7cde0a963e",
+      "size": 1517
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/Usuario.java",
+      "sha256": "83ae6527bb2bc3373a64f9dae855df161481bd2f5311697a09e80d908f4ded58",
+      "size": 2494
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/models/Venta.java",
+      "sha256": "6e3e7ccbf91f1103be136e58acdd7d35ae02de6b852f62a10105afe9f16a7a23",
+      "size": 3460
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/AsistenciaRepository.java",
+      "sha256": "7ddca0412fb09ea59cf92a5296f2c50059597e59aa897c7ae390b1618acd5067",
+      "size": 624
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/AuditoriaRepository.java",
+      "sha256": "53b1961055800effb820e4107f696d2ee2f9458c2f2d61bf60c63e96e37345a5",
+      "size": 420
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/CategoriaRepository.java",
+      "sha256": "dc27274c00651c1992d3a753d96496c226109cab9c3a9dde13234ef307fcbdda",
+      "size": 800
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/ClienteRepository.java",
+      "sha256": "b0227ff04d9d42887ebe5678cdace639143a7e30f90d1c46d8dd56423dbf78c6",
+      "size": 1350
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/ConfiguracionRepository.java",
+      "sha256": "ff83883119f5cdb7b3951360139060ea70087eb1b2d410296489e4474e43efba",
+      "size": 261
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/CorteCajaRepository.java",
+      "sha256": "07486117a579cb11ebd095b17c7aa4489369859e755f9bad9c8d7df69872fa0b",
+      "size": 1117
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/DailySalesProjection.java",
+      "sha256": "7734d8f2f8c127cfc991ab00b33c35e3be1ab5227cd205b17d97ac2cd0727c3c",
+      "size": 196
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/DetalleVentaRepository.java",
+      "sha256": "1cb15384fb6eb8abf83112d31d0de5559b401ffd1fba0428f654ca2732dff543",
+      "size": 542
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/GastoRepository.java",
+      "sha256": "12690be7c714c02938b9217a677f49793b2a00a9c4fd149a5b008df3793670f3",
+      "size": 714
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/InsumoRepository.java",
+      "sha256": "79e2888d91ad9828e6acf7182f73d847d1a73ca43fe6e9d630af0faf5cdf2a80",
+      "size": 1527
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/InventoryPurchasePresentationRepository.java",
+      "sha256": "5cb11f1d9d533b9c73ca1f20b111ece0b7b1cd177e602878f1ff49275da84ec1",
+      "size": 1220
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/InventoryReceiptLineRepository.java",
+      "sha256": "b7fb4df0f3fdabfa082d6d8fbf499195a183a5cd692f8b3f5f7e8585624d2f31",
+      "size": 371
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/InventoryReceiptRepository.java",
+      "sha256": "6ec0dba14706e0635199544230fb2fccb177e2a30342da698cb8e8bec0bd44db",
+      "size": 473
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/InventoryReceiptReversalRepository.java",
+      "sha256": "95e0455ffbcea00b6b1a5340039b2f2a7db40b5b2f9aed21207cd99ca8b4f59f",
+      "size": 447
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/MesaRepository.java",
+      "sha256": "98fbc3a8f718a81f2faf801152819774d054b578c19728d92ec93c998949c31b",
+      "size": 878
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/MovementAggregateProjection.java",
+      "sha256": "c28d4e7c1f07028961cf5f6be573d46ac98a87a9e9548c352c86c5f1a774c225",
+      "size": 200
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/MovimientoInventarioRepository.java",
+      "sha256": "e66c2a4251860260aad2311aa7765fd0c879293cc081490c08e9f4fadd105756",
+      "size": 2138
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/ProductPerformanceProjection.java",
+      "sha256": "4d6b1761a65407c74912e648c63ebb5375ab6b265e9e85fde843940ed2e660e3",
+      "size": 254
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/ProductQuantityProjection.java",
+      "sha256": "611f270157b6eb8214c74f10c281989e5c1f9e3f8c5ab51dcfbfcbcb55f8ef2c",
+      "size": 140
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/ProductoRepository.java",
+      "sha256": "d55842edb21da9ab0c670437601a5b4122626b9a52c53fe5274a568cec440577",
+      "size": 538
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/ProveedorRepository.java",
+      "sha256": "a3552569a147e98fc88fcc1e0ae121d12417dad680449b62dbd204e51cb9c895",
+      "size": 681
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/RecetaRepository.java",
+      "sha256": "022faed36b8b9a73a1d4b0a4c1d70229a0f3fe9a0ba8d1b806ed67116dbc2e25",
+      "size": 364
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/ReservaRepository.java",
+      "sha256": "b992d1d13ebb91970a8628fc1d72814cb2c6f5d7582b6cdcd734ea27bac32ff1",
+      "size": 2872
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/ReservationDailyProjection.java",
+      "sha256": "a5aa34ac1e2a12b01a7fdbad7e8c0f292256e354d75b7c2a8729652224b53c5f",
+      "size": 172
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/SalesPeriodTotals.java",
+      "sha256": "96a33383b359e4ddcd08f7670fa64bac10821afc6041cdb48275f0303f443cdc",
+      "size": 163
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/SubRecetaRepository.java",
+      "sha256": "0cd8dba22020d6cca17cb68de3fa6731d011a48f48d4c81c4fb95c48545e6d0a",
+      "size": 297
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/UsuarioRepository.java",
+      "sha256": "ed9ddc845a7ae4b1f6169a9716d31abfc3c66ca6ff6a71e1effbb877833a7291",
+      "size": 1700
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/VentaRepository.java",
+      "sha256": "729f6b603768102f698b79e1488c4639b0e2368dc503894238ed6c5ab486a01f",
+      "size": 3568
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/repositories/WeekdaySalesProjection.java",
+      "sha256": "bba3353ea3f6a1dc1564d73e378e34836a859876761d56b8e722f1440a979533",
+      "size": 196
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/security/AccessPolicy.java",
+      "sha256": "9371a8026de997ae5e72b85674cf70fe2af5062dada105a85c4eb83ce1f6b808",
+      "size": 2721
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/security/ApplicationRole.java",
+      "sha256": "d5ce3f10ded557f868b70c4c513cd600aaf4cda03822d5a29d556b1852e7b928",
+      "size": 660
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/AsistenciaService.java",
+      "sha256": "ea99c3026143d84f944fbc229404783baf20f3127df97a4bd62314c7deb66db3",
+      "size": 5477
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/AttendancePinCodec.java",
+      "sha256": "11c9fe2a016d5dc48d8669a38f9749a8deb5d57e237166b085fd0933ce24a568",
+      "size": 1952
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/AttendancePinSecretCheck.java",
+      "sha256": "a57cdbbd5538d09e14cfcae3d682052f388dc43158a6e4b44c8e336412e7aa05",
+      "size": 1320
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/AttendanceRateLimiter.java",
+      "sha256": "c0c0517300c3c7f1d6b57704ca6e99e340c8353da270ac74bb84c63a82b97113",
+      "size": 1810
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/AuditoriaService.java",
+      "sha256": "79e5801989951eecaab50c1756347d4ca70e475df08fd71844d8e713932f23f5",
+      "size": 1812
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/CategoriaService.java",
+      "sha256": "67617abf9644556bc6be454b817553c5d74ca5717ac44dd779c10b8121386ead",
+      "size": 2083
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/ClienteBalanceService.java",
+      "sha256": "5391873523bbb1f1f86eb8096245fe510e2a6fcba27928b8d0e96b0c5bfb133b",
+      "size": 4475
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/ConfiguracionService.java",
+      "sha256": "7aec820edc63662c0fe2744f7ffd95512a811eef5198c145a3e3fd5d6b2dbba8",
+      "size": 5314
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/GastoService.java",
+      "sha256": "5011576f993b4cfe5418898b6e3e6042f1bfd14e00d32857d20010994d1920dd",
+      "size": 1254
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/InsumoService.java",
+      "sha256": "5929d19bfea6a2c1fab541098c8ed0ec2f1de1615cb03a6383bed5ca0cdfddd8",
+      "size": 1976
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/LegacyInventoryPrecision.java",
+      "sha256": "43899587ccb010c9ed4af698ed11c0d5701ecf3aea0396fd18f298122abaebe3",
+      "size": 889
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/MesaDisponibilidadService.java",
+      "sha256": "b3e86a882eebfb6efbf70ed2224bb07ed075a6b2cd00bda2e771224c6fc90c2c",
+      "size": 2116
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/MovimientoInventarioService.java",
+      "sha256": "54ca40e546417cd1b8d901d480c9f34eeca2a012aeed09eb984e473ad59ada06",
+      "size": 6462
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/NotificacionService.java",
+      "sha256": "0af1f06aeb34066ae5f60656abde758535cfcea6000f01112ca3ea3af3f99246",
+      "size": 521
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/PredictiveAnalysisService.java",
+      "sha256": "6832fcde3e05e9c843fe74de63eb36462b46b0c17c755660ae1b2485d8159803",
+      "size": 26311
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/ProduccionService.java",
+      "sha256": "32ae0b502556a2320c94c7dd1bf67d265a92864a98a8141f5d6a0869391866eb",
+      "size": 11334
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/ProductoService.java",
+      "sha256": "9c3d94380a451909d906e3779efac292c54c84177bd3fa8e2ab77ef43c9b0482",
+      "size": 4321
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/ProveedorService.java",
+      "sha256": "eba8b1b8ee9a5e3afec3e5bf701bed2c7c74c2cd8446006d5be8534bcd55206a",
+      "size": 1492
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/RecetaService.java",
+      "sha256": "55d1fb3967d7fb0d5e057e59196ec01f6e7e9a583bef80147cc07124eb52838b",
+      "size": 717
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/ReporteService.java",
+      "sha256": "b11f8e8f8f2ecfebb70d8b514c9334806fa29e680025aae7a83bc114f5dd48de",
+      "size": 4754
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/ReservaService.java",
+      "sha256": "b76df8ed7d16959e05839cdc9e837ea4d9448be8bb7215d2cad7818f5aa793e3",
+      "size": 10190
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/SubRecetaService.java",
+      "sha256": "e6e985cf5594690192ae276e03727d9b7b594c9d538f0d4e319413b80a14a110",
+      "size": 2557
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/UsuarioService.java",
+      "sha256": "d06ddd9a55d32f954b2aa00cc94560348ddd4b7064491773989cfe9b22f4d3b8",
+      "size": 9101
+    },
+    {
+      "path": "src/main/java/com/tuapp/restaurante/services/VentaService.java",
+      "sha256": "46560f44cbc38dc8785b74a1a537e2a861a94bce96a6bb73c7f95ab859e1b0f9",
+      "size": 18494
+    },
+    {
+      "path": "src/main/resources/application.properties",
+      "sha256": "650d7fda1a2d6f1ce05bbf2729f0f74fa343260a29c3787da4f3a5a2e4468925",
+      "size": 2225
+    },
+    {
+      "path": "src/main/resources/db/legacy-schema-manifest.sql",
+      "sha256": "fa17668499e54c532fafb4de0d314a132242dcde1931ef1b3a5bfb6a63a4e9d5",
+      "size": 3644
+    },
+    {
+      "path": "src/main/resources/db/legacy-schema-manifest.txt",
+      "sha256": "19471de51e2bfedfd743c829fad510a891df4d478525b9d849e06d6abbb9eb5f",
+      "size": 17749
+    },
+    {
+      "path": "src/main/resources/db/migration/V10__production_request_idempotency.sql",
+      "sha256": "ba7d9988530e5f3aa603fd92e1cbac1ac9f9af439e8b5004114fe3c98da6e448",
+      "size": 758
+    },
+    {
+      "path": "src/main/resources/db/migration/V11__inventory_activation.sql",
+      "sha256": "72422a989b5eb13a80afc4bb20447e363b11089224c9e0f605611f3c00146764",
+      "size": 2617
+    },
+    {
+      "path": "src/main/resources/db/migration/V12__inventory_receipt_storage.sql",
+      "sha256": "439549142b47a4aab4dadcbbd9385dbe0f851423f2542948600de0ac94f57b94",
+      "size": 9300
+    },
+    {
+      "path": "src/main/resources/db/migration/V13__inventory_receipt_reversal.sql",
+      "sha256": "d7370b0acd03cd39d2551201e2d8c033526244cbf38be2e80f5a499d788b0678",
+      "size": 6157
+    },
+    {
+      "path": "src/main/resources/db/migration/V1__legacy_schema.sql",
+      "sha256": "3affdd7c8cec8dbef1c50643481c122b1852ece3d91e27d35b0b108c2087030a",
+      "size": 17120
+    },
+    {
+      "path": "src/main/resources/db/migration/V2__deployment_identity.sql",
+      "sha256": "a15182ae8a0d42188287333b02437e43a365d3384e336b2a31407f4e0c8df137",
+      "size": 253
+    },
+    {
+      "path": "src/main/resources/db/migration/V3__pos_invariants.sql",
+      "sha256": "167cc60d7a0a43d1a1f88ad0ab9acbca5c187f3d370131be80512a8f3eec62ca",
+      "size": 1127
+    },
+    {
+      "path": "src/main/resources/db/migration/V4__attendance_pin_and_open_shift.sql",
+      "sha256": "306c5714e0531a56c4ed85f407fbca1854596e6a5707dcf2870982f4e29a865a",
+      "size": 1317
+    },
+    {
+      "path": "src/main/resources/db/migration/V5__attendance_mark_idempotency.sql",
+      "sha256": "60e0284ded965522e15437c96d7d2d5d0e1690d04260a70855f52b013bccbfba",
+      "size": 400
+    },
+    {
+      "path": "src/main/resources/db/migration/V6__sale_cash_shift.sql",
+      "sha256": "853cf1c2285ecbc7b45ed4559d208d10531a237a90d5543f0f0f69a9783e5cae",
+      "size": 1564
+    },
+    {
+      "path": "src/main/resources/db/migration/V7__inventory_5a_expansion.sql",
+      "sha256": "20d93f23445186cfea84c3e65884a874241a31df3619f50ebc7243b008e0f9c1",
+      "size": 5060
+    },
+    {
+      "path": "src/main/resources/db/migration/V8__inventory_reconciliation_review.sql",
+      "sha256": "5656a19d42970f9cc5f6982665b76b686df17d72ac69aa63cde4d4e180bffde9",
+      "size": 5818
+    },
+    {
+      "path": "src/main/resources/db/migration/V9__inventory_change_applier.sql",
+      "sha256": "f8e83ec74b4fef8ab047021c8218e6891ff771ea590aa8db27725e31eb0fc9b7",
+      "size": 3435
+    },
+    {
+      "path": "src/main/resources/static/css/receipts.css",
+      "sha256": "8a78cc3f367d663ef2e140ab27cc0c604165b668b56b316046d2a3712f314b39",
+      "size": 1458
+    },
+    {
+      "path": "src/main/resources/static/css/style.css",
+      "sha256": "05143ea840fd07888977bea8d7df206145216ffe985f463659e7b5f9fef07217",
+      "size": 5153
+    },
+    {
+      "path": "src/main/resources/static/js/pos-cart-context.js",
+      "sha256": "6af13eccdbff7b468b8eb7c543a546a5dacbe948bcac6151a8e84f647c816402",
+      "size": 3696
+    },
+    {
+      "path": "src/main/resources/static/js/presentation-client.js",
+      "sha256": "185233cfd002b04314be69f334e17b7fd6a633a25b6ea4772b57cf61eae6cd52",
+      "size": 2732
+    },
+    {
+      "path": "src/main/resources/static/js/receipt-client.js",
+      "sha256": "4718df8f7b2a746152d19a4a38fc9de6542510f731987e78f8c544a3f34c9129",
+      "size": 12643
+    },
+    {
+      "path": "src/main/resources/static/js/receipt-reversal-client.js",
+      "sha256": "e3cee000d955ed9c4280b992020c08b4ecfa8350dc23e40d36d2f21975ce94a2",
+      "size": 7107
+    },
+    {
+      "path": "src/main/resources/templates/asistencia/reloj.html",
+      "sha256": "cd7f766449dce326ef68e9acfd2cca1e62d73cb57e547fac79d1c7dbf032faa3",
+      "size": 7664
+    },
+    {
+      "path": "src/main/resources/templates/asistencia/reporte.html",
+      "sha256": "8a17c5654be4509d191727327ebf88eb9c40c3b305ceb414788db4a11c7eb8cc",
+      "size": 5504
+    },
+    {
+      "path": "src/main/resources/templates/base.html",
+      "sha256": "514dc4f75a3c5685d0b20cf777084255592e207491fe656e36c974fbb5b75b84",
+      "size": 31295
+    },
+    {
+      "path": "src/main/resources/templates/caja/cierre.html",
+      "sha256": "cfef1081a6b5ad90a20b2da020709e20e51ae4dc71054f4b141ccd91d0da5215",
+      "size": 8389
+    },
+    {
+      "path": "src/main/resources/templates/caja/panel.html",
+      "sha256": "be32c85f465253979bf31a6898a19a1d0dea4bab30ad8c5994872be7147da92b",
+      "size": 18439
+    },
+    {
+      "path": "src/main/resources/templates/categorias/lista.html",
+      "sha256": "b6e748c382da164a1ee77d7b852166ca1a6fc341f6ebe058b64a86ed80a6cbe4",
+      "size": 14351
+    },
+    {
+      "path": "src/main/resources/templates/clientes/lista.html",
+      "sha256": "1fa364b0fc735e68fec951be3485080f17e28012c468fd0bd3248ffd968eb632",
+      "size": 31527
+    },
+    {
+      "path": "src/main/resources/templates/configuracion/index.html",
+      "sha256": "3d6fc061e701542435ac6f0c3a14e01762c28bcc852e0b24a0f0e92455746602",
+      "size": 21362
+    },
+    {
+      "path": "src/main/resources/templates/dashboard.html",
+      "sha256": "87fa8764f3e65408174d909b98fe7c9a6b0bd7fb7331524d0c08c34ad7beed60",
+      "size": 35975
+    },
+    {
+      "path": "src/main/resources/templates/error.html",
+      "sha256": "5b4537c2c5132aa7e46dbd1bd519f8610b1434837ce5af4b768c32514ebf7969",
+      "size": 2329
+    },
+    {
+      "path": "src/main/resources/templates/fragments/navigation.html",
+      "sha256": "5cedf84b5121ae836aaebcc9256f9e5d06fc9071823e3913a8b3564b37d1d739",
+      "size": 9755
+    },
+    {
+      "path": "src/main/resources/templates/gastos/lista.html",
+      "sha256": "04dad18c4ecb62d8b2db9c2224e913a6e6cec0608c6c34bb3273ed219fd2c302",
+      "size": 9403
+    },
+    {
+      "path": "src/main/resources/templates/ia/compras.html",
+      "sha256": "ef5d1926a56eff7f9286699e289ef8c50588ca61cea91ed915af2b0bb46cd16e",
+      "size": 23483
+    },
+    {
+      "path": "src/main/resources/templates/ia/ordenes.html",
+      "sha256": "f07890589dacfbdc683e8dff53ff5f9ac2a36f084ee1066d2531d6ae6f24a91a",
+      "size": 6043
+    },
+    {
+      "path": "src/main/resources/templates/insumos/lista.html",
+      "sha256": "38ef8742daaecb7a3edb0136c2dc68a18dfd9432083762515abafd835074d784",
+      "size": 34330
+    },
+    {
+      "path": "src/main/resources/templates/insumos/subreceta.html",
+      "sha256": "c74c1cebbd6fba531742fe98543e2b27260e2982a9f9f005324ca08a7fb2cf1b",
+      "size": 10313
+    },
+    {
+      "path": "src/main/resources/templates/inventario/recepciones/detalle.html",
+      "sha256": "b4d5579aad8cd81446b54b488a58a6858c3e6371255d8ff5946894381e27f752",
+      "size": 2834
+    },
+    {
+      "path": "src/main/resources/templates/inventario/recepciones/historial.html",
+      "sha256": "aa349bdb697ca55399a6eda5d857359cf12e494cd3c8d2b9b15c1e23ca2f952f",
+      "size": 2172
+    },
+    {
+      "path": "src/main/resources/templates/inventario/recepciones/nueva.html",
+      "sha256": "8f960969d7515ef2eb6e816deeb87d0d5adc8e3eb4fda89c2aa7439c6d082424",
+      "size": 4220
+    },
+    {
+      "path": "src/main/resources/templates/inventario/recepciones/presentaciones.html",
+      "sha256": "813bb2bf5c96f805c7de4fefca38a78414794ed57d5fd4a545b3ef959cef9a2d",
+      "size": 3122
+    },
+    {
+      "path": "src/main/resources/templates/inventario/recepciones/reverso-detalle.html",
+      "sha256": "04186dc06c248119c882b3a83ac3760a82641172f324910dc097e26d1e546b5b",
+      "size": 2230
+    },
+    {
+      "path": "src/main/resources/templates/inventario/recepciones/reverso-nuevo.html",
+      "sha256": "577d420f280a36c10440fab8ec758100d609e695ca076ba85642017e223a961a",
+      "size": 3015
+    },
+    {
+      "path": "src/main/resources/templates/kds/index.html",
+      "sha256": "8c52e34fb609a43c61e1a80ea5c2a6a5d38e2173efa95ab176eff203dd8d2d7d",
+      "size": 18404
+    },
+    {
+      "path": "src/main/resources/templates/login.html",
+      "sha256": "0c659f530854b8cc49e1bb4f430f691cdb5c92ed51a4008b69253d3ce6938b41",
+      "size": 9936
+    },
+    {
+      "path": "src/main/resources/templates/menu/index.html",
+      "sha256": "1744da057ea3f4e3380df26b49eca4f60dbe2cac655ae828ee1954459999c294",
+      "size": 11575
+    },
+    {
+      "path": "src/main/resources/templates/mesas/mapa.html",
+      "sha256": "c50d69d510338679caf957154c224add9c8bf45464e75ef207ca2b9f3a980ae2",
+      "size": 30721
+    },
+    {
+      "path": "src/main/resources/templates/movimientos/lista.html",
+      "sha256": "7990defc5d662eaa04c892a36773789cd0ebafb89ac43c46a4bac445a3b161cd",
+      "size": 5911
+    },
+    {
+      "path": "src/main/resources/templates/movimientos/merma.html",
+      "sha256": "b4103a45dfb8284d9fc4ec63c49e373914d8a053a5e9585742acf23c711c5696",
+      "size": 4327
+    },
+    {
+      "path": "src/main/resources/templates/movimientos/registrar.html",
+      "sha256": "3049b019c52336d1990f343f3185ae1d9cfe2d6168103789e02e32d3276c6648",
+      "size": 7753
+    },
+    {
+      "path": "src/main/resources/templates/pos/cocina.html",
+      "sha256": "9ef654b53df4822081fac1ced3ae2573293c21b6d497fa0d26ff9b0ef9acbef6",
+      "size": 5941
+    },
+    {
+      "path": "src/main/resources/templates/pos/historial.html",
+      "sha256": "f4bb2919588e6ac142f66faf03419eacc9a87c2e6c65ee1b40e50f7adff3cc5c",
+      "size": 3074
+    },
+    {
+      "path": "src/main/resources/templates/pos/index.html",
+      "sha256": "494c3a4cfe302fde0798898813d1a2123c7b62f0a99a303267b88714196a17c2",
+      "size": 50889
+    },
+    {
+      "path": "src/main/resources/templates/pos/ticket.html",
+      "sha256": "24af269136ffa1f2b82d61485692be4cebbf3dca1f582def3fdf18272359b19f",
+      "size": 10086
+    },
+    {
+      "path": "src/main/resources/templates/productos/lista.html",
+      "sha256": "e3c7542d52d9b325dba85b5a3b5d49d5d819af2bc9b77afc6c3cfb77045a4cc9",
+      "size": 29163
+    },
+    {
+      "path": "src/main/resources/templates/productos/receta.html",
+      "sha256": "21d8a77ad5cb896efefdec0cf6432a1be7491a21f5339313666fbea5943aca52",
+      "size": 10926
+    },
+    {
+      "path": "src/main/resources/templates/proveedores/lista.html",
+      "sha256": "bc140105eb367c8d9b49d67958d9b8c951d3a6f49ca58651c538d4b6d9966429",
+      "size": 12473
+    },
+    {
+      "path": "src/main/resources/templates/reportes/index.html",
+      "sha256": "9488d1e895a8611660acb0ca2f90989002a9279aa03e6db42810c7720eece878",
+      "size": 6586
+    },
+    {
+      "path": "src/main/resources/templates/reportes/inventario_pdf.html",
+      "sha256": "abe7d0492f8483ca2de052484f1bee58fe302c2874bedd539fc94dc1af84189f",
+      "size": 3628
+    },
+    {
+      "path": "src/main/resources/templates/reportes/ventas_pdf.html",
+      "sha256": "24972c9eb3c320658464afe6b4c0f837ffa8c93580b6589d0109f331d1e8d772",
+      "size": 4494
+    },
+    {
+      "path": "src/main/resources/templates/reservas/index.html",
+      "sha256": "6802ce92d5a1294d5c704d0441b568bba6df874e1ca3dc3cc1ac2304fd5e6778",
+      "size": 43705
+    },
+    {
+      "path": "src/main/resources/templates/usuarios/lista.html",
+      "sha256": "8252e55c76961cafceeae2c7285186c1a7ac44fc2ee6bef4f2e47ff95a7aec12",
+      "size": 18202
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/AuthorizationConcurrencyRegressionTest.java",
+      "sha256": "4d4143fa98878c5ddf5755b695d0e4eae1adb3a28d290747c4c3d17cb1f80057",
+      "size": 9347
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/ConcurrencyFreshnessRegressionTest.java",
+      "sha256": "b747ad77710b3ed50873c7e3cfb51d36ed448b477e13dbc80cdc747f35988911",
+      "size": 23790
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/SecurityHttpRegressionTest.java",
+      "sha256": "369e8bff25d9458227f3230abbe464b556f783a20a6e8db0bd260ced803ecba1",
+      "size": 19724
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/SecurityServiceRegressionTest.java",
+      "sha256": "50a9c48581207b32f8a8cf27bbaf09614347199e37053f5b3b76ca963b7b60db",
+      "size": 7416
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/Slice0IntegrationTest.java",
+      "sha256": "710ae21b41daf6763e58d184b2a1eef64c7e2c4b6971b9827286afb5871e6bb0",
+      "size": 140192
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/SyntheticSecurity.java",
+      "sha256": "284ad1b65c7a6e462f1b4f14444084e1f72454021c8bfabbded4cc01d45417c7",
+      "size": 1283
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/inventory/Inventory5APerformanceProbeTest.java",
+      "sha256": "29565ea1940b6c2ebece62ea6f4d786d0bdd95ba1dc1c346bb315acbbfd52615",
+      "size": 8031
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/inventory/InventoryActivationIntegrationTest.java",
+      "sha256": "0de1009ba2d7c166d00ecf7f34900486503978e1f13937ac95021dcbdcfc7e7b",
+      "size": 24016
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/inventory/InventoryChangeApplierIntegrationTest.java",
+      "sha256": "4fbd03099024021a144800a314ac50a8318aa9cffe093950651bc6a7ac2528c4",
+      "size": 23203
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/inventory/InventoryUnitsTest.java",
+      "sha256": "21219f1b31a0aba95bb17ce0ef22cf3f03d4017188f178bf353ecfeb8ce5842e",
+      "size": 6170
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/inventory/InventoryWritePolicyTest.java",
+      "sha256": "baee9150ea95b5a532d95cdc79a5d480d0f73a3fc2daf3846452657a35729f00",
+      "size": 1745
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/inventory/ReceiptNumbersTest.java",
+      "sha256": "679039f8c8784e21b7f471f6525a7f504f1b61e524365c7413b0643f4d7cd2b8",
+      "size": 2319
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/inventory/ReceiptPersistenceIntegrationTest.java",
+      "sha256": "f42b16d89a0ed08c2fd82bf87ca4b73466e959f14e173afb018494df16db47a5",
+      "size": 20380
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/inventory/ReceiptReversalIntegrationTest.java",
+      "sha256": "229daf5dc0a22f0152e56b53121820e3c881d2c4efce2f548c1d68b6c12abb1a",
+      "size": 32172
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/inventory/ReceiptReversalRestoreIntegrationTest.java",
+      "sha256": "2d1c64e57cb8ee3ce638a962b8cfce320903d060554dbbc8718bd7a73802df1a",
+      "size": 2192
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/inventory/ReceiptReversalWebIntegrationTest.java",
+      "sha256": "60ea8471e9403f56b67a124d182a32c83f02f0b092cee351b8626fa84256a2ca",
+      "size": 17647
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/inventory/ReceiptServiceIntegrationTest.java",
+      "sha256": "d0d44ae66e628dabab5abfa700cfd2a3e614e3ca3096eb29265a10875032425a",
+      "size": 27872
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/inventory/ReceiptWebIntegrationTest.java",
+      "sha256": "b9ddb0aa2d59ceff7f9d31c1d4ca99a257dc212f21c26b6f744961f20d3178a7",
+      "size": 19423
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/services/InventoryWriterExclusivityIntegrationTest.java",
+      "sha256": "33627f941a65d610dc3f83198f41c92d1d7808004ef593dc414c3d47ec8d1319",
+      "size": 7051
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/services/LegacyInventoryPrecisionIntegrationTest.java",
+      "sha256": "b41c6de24662432a51994c124c0418406b43ebb095a4f6f6cf979e1a523b7c14",
+      "size": 6774
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/services/ProduccionInventoryPolicyIntegrationTest.java",
+      "sha256": "576fff2963785045bc3bf4be6a58f41f607a1f61ab86d5d8b64952098fc74b7a",
+      "size": 24091
+    },
+    {
+      "path": "src/test/java/com/tuapp/restaurante/services/VentaInventoryPolicyIntegrationTest.java",
+      "sha256": "671b93a51b69d914548c4a6ee28d7b1dca358cb8630fa67e4b18e514bb33cca6",
+      "size": 16168
+    },
+    {
+      "path": "src/test/resources/application-slice0.properties",
+      "sha256": "06d8891c22addbd78731678752ed117f234504f66254573b55d77ac801d27384",
+      "size": 548
+    },
+    {
+      "path": "src/test/resources/db/slice1-abort/V1__partial_then_error.sql",
+      "sha256": "b310ec9c598e4920315d5ba7729a52328729332eddef92f7d37b680f749650f3",
+      "size": 73
+    },
+    {
+      "path": "src/test/resources/db/slice1-retry/V1__retry_after_rollback.sql",
+      "sha256": "f303a8b0592743b7d44ac36d6c4c5bcd99e72d42756d3665abb233ee3330e8b0",
+      "size": 59
+    },
+    {
+      "path": "src/test/resources/inventory5a-restore-fixture.sql",
+      "sha256": "52b8117900e3fcf51bd28fc61c23c548b9cbab801eecd7dc8a007394edca6198",
+      "size": 3076
+    },
+    {
+      "path": "src/test/resources/inventory5b1-storage-fixture.sql",
+      "sha256": "0960668953674e397b497fcf33aa42ef45ad0a1f6e7100ca7de0ccead1b714fa",
+      "size": 1577
+    },
+    {
+      "path": "src/test/resources/inventory5b4-reversal-restore-fixture.sql",
+      "sha256": "49e909ac9ea2e9ac5489fed2f9f7c46340f2083e94c9fb33a3404392c14c3139",
+      "size": 4139
+    },
+    {
+      "path": "src/test/resources/legacy-schema.sql",
+      "sha256": "cceb19ef1cf042bb1084b7b39f5271ffa8b0e39b1d477d5cb015824bdae430d9",
+      "size": 26856
+    }
+  ],
+  "excluded": [
+    "previous Git history and metadata",
+    ".env and local secrets",
+    "uploads, runtime data, logs, backups and builds",
+    "AGENTS.md, MEMORY.md and private operational/audit documentation",
+    "two 508 KB brand SVGs: provenance/redistribution rights unresolved",
+    "remote KDS sound: source/redistribution terms unresolved"
+  ]
+}

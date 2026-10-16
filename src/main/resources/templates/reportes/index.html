@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<style>
+        .page-header h1 { font-size: 2.2rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; margin-bottom: 0.2rem; }
+        .summary-card { background: linear-gradient(135deg, rgba(42,182,161,0.12), rgba(42,182,161,0.05)); border: 1px solid rgba(42,182,161,0.25); }
+        .table-custom { color: #fff; border-collapse: separate; border-spacing: 0 8px; width: 100%; }
+        .table-custom th { color: rgba(255,255,255,0.85); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 1.25rem 1rem; border: none; font-weight: 700; }
+        .table-custom td { background: rgba(255,255,255,0.02); padding: 1rem; border: none; vertical-align: middle; }
+        .table-custom tr td:first-child { border-radius: 12px 0 0 12px; }
+        .table-custom tr td:last-child { border-radius: 0 12px 12px 0; }
+        .table-custom tr:hover td { background: rgba(255,255,255,0.05); }
+        .btn-outline-custom { background: transparent; border: 1px solid var(--border); color: #fff; border-radius: 10px; padding: 0.65rem 1.25rem; }
+        .btn-outline-custom:hover { background: rgba(255,255,255,0.05); }
+        .form-control-dark { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; border-radius: 10px; padding: 0.5rem 1rem; width: auto; color-scheme: dark;}
+        .report-metric { font-size: 2rem; font-weight: 800; margin: 0.5rem 0; letter-spacing: -0.01em; }
+        .metric-label { color: rgba(255,255,255,0.9); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.25rem; }
+        .metric-sub { color: rgba(255,255,255,0.5); font-size: 0.75rem; }
+        @media print {
+            .sidebar, .page-header, .filter-box, .btn-print-action, .no-print { display: none !important; }
+            .main-content { margin-left: 0; padding: 0; width: 100%; }
+            .card-custom { border: none; box-shadow: none; background: transparent !important; color: #000; }
+            body { background: #fff !important; color: #000 !important; }
+            .table-custom td, .table-custom th { color: #000 !important; background: none; border-bottom: 1px solid #ddd; }
+        }
+    </style>
+<main class="main-content">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-end mb-4 page-header">
+        <div>
+            <h1 th:text="${titulo}">Reporte de Ventas</h1>
+            <p style="color: rgba(255,255,255,0.5); margin-bottom: 0; font-size: 0.9rem;">Análisis detallado de facturación diaria</p>
+        </div>
+        <div class="d-flex gap-3 no-print filter-box flex-wrap">
+            <form th:action="@{/reportes}" method="get" class="d-flex align-items-center gap-2">
+                <input type="date" name="fecha" th:value="${fechaSeleccionada}" class="form-control-dark" onchange="this.form.submit()">
+            </form>
+            <a th:href="@{/reportes/ventas/pdf(fecha=${fechaSeleccionada})}" class="btn-primary-custom btn-print-action" style="background: linear-gradient(135deg, #2AB6A1, #1E8E7C); text-decoration: none;">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Vista Imprimible / PDF
+            </a>
+            <button onclick="window.print()" class="btn-primary-custom btn-print-action">
+                <i class="bi bi-printer-fill"></i> Imprimir Rápido
+            </button>
+        </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card-custom summary-card">
+                <div class="metric-label">Total Recaudado</div>
+                <div class="report-metric text-success" th:text="'$' + ${totalRecaudado}">$0.00</div>
+                <div class="metric-sub">Ingreso bruto del día</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-custom">
+                <div class="metric-label">Tickets Emitidos</div>
+                <div class="report-metric" th:text="${ventas.size()}">0</div>
+                <div class="metric-sub">Transacciones completadas</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card-custom">
+                <div class="metric-label">Promedio por Ticket</div>
+                <div class="report-metric text-info" 
+                     th:text="${ventas.size() > 0 ? '$' + #numbers.formatDecimal(totalRecaudado.divide(new java.math.BigDecimal(ventas.size()), 2, T(java.math.RoundingMode).HALF_UP), 1,  2) : '$0.00'}">
+                     $0.00
+                </div>
+                <div class="metric-sub">Valor medio de compra</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Table -->
+    <div class="card-custom">
+        <h5 class="fw-bold mb-4">Detalle de Operaciones</h5>
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>ID Ticket</th>
+                        <th>Hora</th>
+                        <th>Productos</th>
+                        <th>Cajero</th>
+                        <th class="text-end">Monto Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="v : ${ventas}">
+                        <td class="fw-bold" th:text="'#' + ${v.id}">#001</td>
+                        <td th:text="${#temporals.format(v.fecha, 'HH:mm:ss')}">00:00</td>
+                        <td>
+                            <div th:each="det : ${v.detalles}" class="small">
+                                <span th:text="${det.cantidad} + 'x ' + ${det.producto.nombre}">1x Item</span>
+                            </div>
+                        </td>
+                        <td th:text="${v.usuario.username}">User</td>
+                        <td class="text-end fw-bold text-success" th:text="'$' + ${v.total}">$0.00</td>
+                    </tr>
+                    <tr th:if="${ventas.isEmpty()}">
+                        <td colspan="5" class="text-center py-5 text-muted">Aún no hay ventas registradas para esta fecha.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+</body>
+</html>

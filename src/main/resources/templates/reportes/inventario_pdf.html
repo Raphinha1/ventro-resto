@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Almacén - Ventro Resto</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; margin: 0; padding: 20px; font-size: 12px; color: #333; }
+        .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #2AB6A1; padding-bottom: 10px; margin-bottom: 20px; }
+        .header h1 { margin: 0; color: #2AB6A1; font-size: 24px; }
+        .info { font-size: 10px; text-align: right; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .table th { background-color: #f2f2f2; border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .table td { border: 1px solid #ddd; padding: 8px; vertical-align: middle; }
+        .stock-bajo { color: #d9534f; font-weight: bold; }
+        .badge { display: inline-block; padding: 3px 6px; border-radius: 4px; font-size: 10px; color: #fff; background: #5cb85c; }
+        .footer { margin-top: 30px; font-size: 10px; border-top: 1px solid #ddd; padding-top: 10px; text-align: center; }
+        @media print {
+            .no-print { display: none; }
+        }
+        .btn-print { background: #2AB6A1; color: #fff; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align: center;">
+        <button onclick="window.print()" class="btn-print">Imprimir a PDF</button>
+        <button onclick="window.history.back()" style="padding: 10px 20px; cursor: pointer;">Regresar</button>
+    </div>
+
+    <div class="header">
+        <div>
+            <h1>📦 REPORTE DE ALMACÉN</h1>
+            <p>Sistema Ventro Resto - Gestión de Inventarios</p>
+        </div>
+        <div class="info">
+            <p><strong>FECHA DE EMISIÓN:</strong> <span th:text="${#temporals.format(fechaActual, 'dd/MM/yyyy')}">--/--/--</span></p>
+            <p><strong>REPORTE ID:</strong> <span th:text="${T(java.util.UUID).randomUUID().toString().substring(0,8).toUpperCase()}">INV-01</span></p>
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>DESCRIPCIÓN DEL INSUMO</th>
+                <th>CATEGORÍA</th>
+                <th>STOCK ACTUAL</th>
+                <th>COSTO UNIT.</th>
+                <th>ESTADO</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="ins : ${insumos}">
+                <td th:text="${ins.id}">1</td>
+                <td>
+                    <strong th:text="${ins.nombre}">Insumo</strong><br>
+                    <small>Proveedor: <span th:text="${ins.proveedor != null ? ins.proveedor.nombreEmpresa : 'S/P'}">Genérico</span></small>
+                </td>
+                <td th:text="${ins.categoria != null ? ins.categoria.nombre : 'General'}">Categoría</td>
+                <td th:text="${ins.stockActual} + ' ' + ${ins.unidadMedida}">0 Pz</td>
+                <td th:text="'$' + ${ins.costoUnitario}">$0.00</td>
+                <td>
+                    <span th:if="${ins.stockActual <= ins.stockMinimo}" class="stock-bajo">⚠️ BAJO CRÍTICO</span>
+                    <span th:unless="${ins.stockActual <= ins.stockMinimo}" class="badge">OK - DISPONIBLE</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Documento generado internamente por software de gestión.</p>
+        <p>VENTRO RESTO © 2026 - Todos los derechos reservados.</p>
+    </div>
+</body>
+</html>

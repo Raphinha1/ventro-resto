@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<main class="main-content receipt-page" id="receipt-app" th:data-currency="${currency}" th:data-actor="${actorContext}"
+      th:data-restaurant="${@environment.getProperty('ventro.restaurant-id')}">
+<link rel="stylesheet" th:href="@{/css/receipts.css}">
+<header class="page-header receipt-toolbar">
+    <div><h1>Nueva recepción</h1><p>Registra cantidades recibidas y costo real de compra.</p></div>
+    <a th:href="@{/inventario/recepciones}">Historial de recepciones</a>
+</header>
+<p class="alert alert-warning" th:if="${#strings.isEmpty(currency)}">Moneda no configurada: no se pueden confirmar nuevas recepciones. Un envío histórico conserva su moneda.</p>
+<div id="receipt-message" role="status" aria-live="polite" tabindex="-1"></div>
+<form id="receipt-form">
+    <fieldset id="receipt-fields">
+    <div class="card-custom receipt-grid">
+        <div><label for="receipt-currency">Moneda del restaurante</label><input id="receipt-currency" class="form-control" th:value="${currency}" readonly></div>
+        <div><label for="supplier">Proveedor (opcional)</label><select id="supplier" class="form-select"><option value="">Sin proveedor</option>
+            <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.nombre_empresa}"></option></select></div>
+        <div><label for="document">Documento externo (opcional)</label><input id="document" class="form-control" maxlength="200"></div>
+    </div>
+    <p id="receipt-help">Cantidades: hasta 6 decimales. Costo real: hasta 2 decimales. Usa punto decimal; no se redondean valores.</p>
+    <section id="receipt-lines" aria-label="Líneas de recepción"></section>
+    <button type="button" id="add-line" class="btn btn-outline-light">Añadir línea</button>
+    </fieldset>
+    <div class="receipt-toolbar receipt-actions">
+        <button type="submit" id="confirm-receipt" class="btn-primary-custom">Confirmar recepción</button>
+        <button type="button" id="retry-receipt" class="btn btn-outline-light" hidden>Reintentar el mismo envío</button>
+        <button type="button" id="new-receipt" class="btn btn-outline-light" hidden>Nueva recepción</button>
+        <a id="receipt-detail" hidden>Ver recepción confirmada</a>
+    </div>
+    <p>Intento: <output id="receipt-request"></output></p>
+</form>
+<template id="receipt-line-template">
+    <fieldset class="card-custom receipt-line">
+        <legend></legend><div class="receipt-grid">
+        <div><label data-label="ingredient">Ingrediente *</label><select data-field="ingredient" class="form-select" required>
+            <option value="">Selecciona ingrediente</option>
+            <option th:each="i : ${ingredients}" th:value="${i.id}" th:text="${i.nombre + ' · ' + i.unidad_base_codigo}"></option>
+        </select></div>
+        <div><label data-label="presentation">Presentación activa *</label><select data-field="presentation" class="form-select" required><option value="">Selecciona ingrediente primero</option></select>
+            <a data-manage th:if="${canManage}" hidden>Gestionar presentaciones</a></div>
+        <div><label data-label="purchased">Cantidad comprada *</label><input data-field="purchased" class="form-control" inputmode="decimal" required aria-describedby="receipt-help"></div>
+        <div data-base><label data-label="receivedBase">Base real medida (total de la línea) *</label><input data-field="receivedBase" class="form-control" inputmode="decimal" aria-describedby="receipt-help"></div>
+        <div><label data-label="cost">Costo total real *</label><input data-field="cost" class="form-control" inputmode="decimal" required aria-describedby="receipt-help"></div>
+        </div>
+        <p data-preview aria-live="polite"></p>
+        <button type="button" data-remove class="btn btn-outline-light">Quitar línea</button>
+    </fieldset>
+</template>
+<noscript><p class="alert alert-warning">Este formulario necesita JavaScript para preservar el intento y confirmar la recepción.</p></noscript>
+<script th:src="@{/js/receipt-client.js}"></script>
+</main>
+</body></html>

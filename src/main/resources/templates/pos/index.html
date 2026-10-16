@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<style>
+        /* Estilos propios del POS — la responsividad del sidebar la maneja base.html */
+        .card-custom { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; }
+        .card-producto { text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s; padding: 1.5rem; }
+        .card-producto:hover { transform: scale(1.02); }
+        .producto-icon { height: 140px; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); }
+        .producto-icon img { width: 100%; height: 100%; object-fit: cover; }
+        .producto-icon span { font-size: 4rem; }
+        .btn-add { background: rgba(42,182,161,0.1); border: 1px solid var(--primary); color: var(--primary); border-radius: 10px; width: 100%; padding: 0.6rem; font-weight: 600; transition: all 0.2s; }
+        .btn-add:hover { background: var(--primary); color: #fff; }
+        .btn-add:disabled { opacity: 0.5; cursor: not-allowed; border-color: gray; color: gray; }
+        .form-control:focus { background: rgba(255,255,255,0.1); border-color: var(--primary); color: #fff; box-shadow: none; }
+        .form-control::placeholder { color: rgba(255,255,255,0.45); opacity: 1; }
+        .btn-primary-custom { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border: none; color: #fff; border-radius: 12px; padding: 0.8rem 1.5rem; font-weight: 600; transition: all 0.2s; }
+        .ticket-container { position: sticky; top: 2rem; max-height: calc(100vh - 4rem); display: flex; flex-direction: column; }
+        .ticket-items { overflow-y: auto; flex-grow: 1; margin-bottom: 1rem; }
+        .ticket-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+        .btn-vender { background: linear-gradient(135deg, #10b981, #059669); border: none; color: #fff; border-radius: 12px; padding: 0.8rem; font-weight: 700; width: 100%; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
+        .btn-vender:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16,185,129,0.4); }
+        .btn-vender:disabled { background: #3d4255; box-shadow: none; transform: none; }
+
+        /* Responsive POS */
+        @media (max-width: 768px) {
+            .ticket-container { position: relative !important; top: auto !important; max-height: none !important; margin-top: 1.5rem; }
+        }
+    </style>
+<style>
+        .filter-pill { border: 1px solid var(--border); border-radius: 20px; white-space: nowrap; padding: 0.5rem 1.2rem; transition: all 0.2s; font-weight: 500; }
+        .filter-pill:hover { background: rgba(42,182,161,0.1); border-color: var(--primary); }
+        .filter-pill.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .custom-scrollbar::-webkit-scrollbar { height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    </style>
+<style>
+    .payment-tab {
+        flex: 1; padding: 0.6rem 0.5rem; border: 1px solid var(--border);
+        background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.6);
+        border-radius: 10px; font-size: 0.82rem; font-weight: 600;
+        cursor: pointer; transition: all 0.2s; display: flex; align-items: center;
+        justify-content: center; gap: 0.4rem;
+    }
+    .payment-tab:hover { background: rgba(42,182,161,0.08); border-color: var(--primary); color: #fff; }
+    .payment-tab.active { background: rgba(42,182,161,0.15); border-color: var(--primary); color: var(--primary); }
+    .quick-cash-btn {
+        padding: 0.4rem 0.9rem; border: 1px solid var(--border);
+        background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7);
+        border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+    }
+    .quick-cash-btn:hover { background: rgba(42,182,161,0.1); border-color: var(--primary); color: #fff; }
+</style>
+<main class="main-content">
+    <!-- Header -->
+    <div class="page-header mb-4">
+        <h1>🛎️ Terminal Punto de Venta</h1>
+        <span style="color:var(--text-muted)">Selecciona varios platillos para generar un ticket</span>
+    </div>
+    
+    <!-- Banner de Mesa Activa -->
+    <div th:if="${mesaActiva}" class="alert border-0 mb-4 d-flex align-items-center justify-content-between" style="background: rgba(139, 92, 246, 0.15); color: #a78bfa; border-radius: 12px; border-left: 4px solid #8b5cf6 !important;">
+        <div class="d-flex align-items-center gap-3">
+            <div style="width: 40px; height: 40px; background: rgba(139, 92, 246, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                🪑
+            </div>
+            <div>
+                <h5 class="mb-0 fw-bold">Mesa #<span th:text="${mesaActiva.numero}"></span> <span th:if="${mesaActiva.zona}" th:text="' - ' + ${mesaActiva.zona}" class="text-muted fw-normal"></span></h5>
+                <small style="opacity: 0.8;"><i class="bi bi-clock"></i> Abierta por: <span th:text="${mesaActiva.mozo}"></span></small>
+            </div>
+        </div>
+        <a th:href="@{/pos}" class="btn btn-sm btn-outline-light" style="border-color: rgba(255,255,255,0.2);">Desvincular</a>
+    </div>
+
+    <!-- Mensajes Flash -->
+    <div th:if="${mensajeExito}" id="pos-sale-success" th:data-sale-key="${ventaAceptadaKey}" class="alert alert-success border-0 mb-4 d-flex align-items-center justify-content-between" style="background: rgba(16,185,129,0.2); color: #34d399;">
+        <div>
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${mensajeExito}"></span>
+        </div>
+        <div th:if="${ultimoTicketId}" class="d-flex gap-2">
+            <a th:href="@{'/pos/ticket/' + ${ultimoTicketId}}" target="_blank" class="btn btn-sm btn-success" style="background:#10b981; border:none; border-radius:8px; font-weight:600">
+                <i class="bi bi-printer-fill me-1"></i> Ticket Cliente
+            </a>
+            <a th:href="@{'/pos/cocina/' + ${ultimoTicketId}}" target="_blank" class="btn btn-sm btn-warning" style="background:#f59e0b; color:#fff; border:none; border-radius:8px; font-weight:600">
+                <i class="bi bi-egg-fried me-1"></i> Comanda Cocina
+            </a>
+        </div>
+    </div>
+    <div th:if="${mensajeError}" id="pos-sale-error" th:data-sale-key="${ventaRechazadaKey}" class="alert alert-danger border-0 mb-4" style="background: rgba(239,68,68,0.2); color: #f87171;">
+        <span th:text="${mensajeError}"></span>
+    </div>
+    <div id="pos-legacy-warning" class="alert alert-warning d-none" role="alert">
+        <span id="pos-legacy-message">Hay un carrito anterior sin contexto confirmado.</span>
+        <button type="button" id="pos-legacy-adopt" class="btn btn-sm btn-outline-dark ms-2">Usar en este contexto</button>
+        <button type="button" id="pos-legacy-discard" class="btn btn-sm btn-outline-dark ms-2">Descartar carrito anterior</button>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-7">
+            <div class="input-group">
+                <span class="input-group-text border-0" style="background:var(--card-bg); color:var(--text-muted)"><i class="bi bi-search"></i></span>
+                <input type="text" id="pos-search" class="form-control border-0" placeholder="Buscar platillo por nombre..." 
+                       style="background:var(--card-bg); color:#fff; border-radius:0 12px 12px 0; padding:0.8rem" onkeyup="filterProducts()">
+            </div>
+        </div>
+        <div class="col-md-5 d-flex align-items-center gap-2 overflow-auto pb-1 custom-scrollbar">
+            <button class="btn btn-sm btn-outline-light filter-pill active" onclick="setCategory(null, this)">Todos</button>
+            <button th:each="cat : ${categorias}" 
+                    class="btn btn-sm btn-outline-light filter-pill" 
+                    th:text="${cat.nombre}"
+                    th:onclick="'setCategory(' + ${cat.id} + ', this)'"></button>
+        </div>
+    </div> 
+
+    
+
+    <div class="row">
+        <!-- Grid de Productos (Izquierda) -->
+        <div class="col-lg-8">
+            <div class="row g-3" id="productos-grid">
+                <div class="col-md-4 col-sm-6 product-col" 
+                     th:each="producto : ${productos}"
+                     th:data-nombre="${producto.nombre.toLowerCase()}"
+                     th:data-categoria-id="${producto.categoria != null ? producto.categoria.id : '0'}">
+                    <div class="card-custom card-producto">
+                        <div>
+                            <div class="producto-icon">
+                                <img th:if="${producto.imagenUrl != null}" th:src="${producto.imagenUrl}" th:alt="${producto.nombre}">
+                                <th:block th:unless="${producto.imagenUrl != null}"
+                                          th:with="isBebida=${producto.nombre.toLowerCase().contains('bebida') or (producto.categoria != null and producto.categoria.nombre.toLowerCase().contains('bebida'))},
+                                                   isHamburguesa=${producto.nombre.toLowerCase().contains('hamburguesa')}">
+                                    <span th:if="${isBebida}">🥤</span>
+                                    <span th:if="${!isBebida and isHamburguesa}">🍔</span>
+                                    <span th:if="${!isBebida and !isHamburguesa}">🍽️</span>
+                                </th:block>
+                            </div>
+                            <h5 class="fw-bold mb-1" th:text="${producto.nombre}">Platillo</h5>
+                            <p class="text-muted small mb-2" th:text="${producto.categoria != null ? producto.categoria.nombre : 'General'}">Categoría</p>
+                            <h4 style="color: #2AB6A1;" class="mb-1" th:text="'$' + ${producto.precioVenta}">$0.00</h4>
+                            <div th:if="${producto.puntosPrecio != null and producto.puntosPrecio > 0}" class="small mb-2" style="color: #a78bfa;">
+                                <i class="bi bi-star-fill text-warning"></i> <span th:text="${producto.puntosPrecio} + ' pts'"></span>
+                            </div>
+                            
+                            <!-- Alerta de disponibilidad -->
+                            <th:block th:with="maxPorciones=${disponibilidad != null ? disponibilidad[producto.id] : 999}">
+                                <div th:if="${maxPorciones == 0}" class="badge bg-danger mb-1"><i class="bi bi-x-circle me-1"></i> Agotado</div>
+                                <div th:if="${maxPorciones > 0 && maxPorciones <= 5}" class="badge bg-warning text-dark mb-1"><i class="bi bi-exclamation-triangle me-1"></i> Últimas <span th:text="${maxPorciones}"></span></div>
+                            </th:block>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <th:block th:with="maxPorciones=${disponibilidad != null ? disponibilidad[producto.id] : 999}">
+                                <button type="button" class="btn-add btn-agregar-pos" 
+                                        th:data-id="${producto.id}"
+                                        th:data-nombre="${producto.nombre}"
+                                        th:data-precio="${producto.precioVenta}"
+                                        th:data-puntos-precio="${producto.puntosPrecio}"
+                                        onclick="addToCart(this)"
+                                        th:disabled="${maxPorciones == 0 or (!producto.esReventa and #lists.isEmpty(producto.ingredientes))}">
+                                    <i th:if="${maxPorciones > 0}" class="bi bi-plus-lg"></i> 
+                                    <i th:if="${maxPorciones == 0}" class="bi bi-slash-circle"></i>
+                                    <span th:text="${maxPorciones == 0 ? 'Sin Stock' : 'Agregar'}"></span>
+                                </button>
+                            </th:block>
+                            <div th:if="${!producto.esReventa and #lists.isEmpty(producto.ingredientes)}" class="text-danger small mt-2">
+                                <i class="bi bi-exclamation-circle"></i> Sin receta
+                            </div>
+                            <div th:if="${producto.esReventa}" class="text-primary small mt-2">
+                                <i class="bi bi-box-seam"></i> Producto de reventa
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Mensaje de no resultados -->
+                <div id="no-results" class="col-12 text-center py-5 d-none">
+                    <h4 class="text-muted">No se encontraron platillos.</h4>
+                </div>
+                <div th:if="${#lists.isEmpty(productos)}" class="col-12 text-center py-5">
+                    <h4 class="text-muted">No hay productos disponibles.</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticket / Carrito (Derecha) -->
+        <div class="col-lg-4">
+            <div class="card-custom p-4 ticket-container">
+                <h5 class="fw-bold mb-4 border-bottom pb-2"><i class="bi bi-receipt me-2"></i> Orden Actual</h5>
+                
+                <div id="cart-items" class="ticket-items">
+                    <p class="text-muted text-center py-4">No hay platillos seleccionados</p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="text-muted small mb-1"><i class="bi bi-person-heart"></i> Cliente (Programa de Lealtad)</label>
+                    <select id="select-cliente" class="form-select border-0 form-select-sm" style="background:rgba(255,255,255,0.05); color:#fff;">
+                        <option value="">Consumidor Final (Sin puntos)</option>
+                        <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nombre} + ' (' + ${c.puntos} + ' pts)'"></option>
+                    </select>
+                </div>
+
+                <div class="border-top pt-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal</span>
+                        <span id="subtotal">$0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-4">
+                        <h4 class="fw-bold">Total</h4>
+                        <h4 class="fw-bold text-success" id="total">$0.00</h4>
+                    </div>
+                    
+                    <form id="checkout-form" th:action="@{/pos/venta-multiple}" method="post">
+                        <input type="hidden" name="idempotencyKey" th:value="${idempotencyKey}">
+                        <!-- Campos dinámicos de productos irán aquí -->
+                        <div id="hidden-inputs"></div>
+                        <input th:if="${mesaActiva}" type="hidden" name="mesaId" th:value="${mesaActiva.id}">
+                        <!-- Campos de pago generados por JS -->
+                        <input type="hidden" name="metodoPago" id="field-metodoPago" value="EFECTIVO">
+                        <input type="hidden" name="montoEfectivo" id="field-montoEfectivo" value="0">
+                        <input type="hidden" name="montoTarjeta" id="field-montoTarjeta" value="0">
+                        <input type="hidden" name="clienteId" id="field-clienteId" value="">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn" style="background:#2D3561; color:#fff; flex-grow:0; padding:15px; border-radius:12px; border:none; display:flex; align-items:center; justify-content:center; width:56px;" onclick="abrirModalDividir()" id="btn-dividir" disabled title="Dividir Cuenta">
+                                <i class="bi bi-layout-split fs-5"></i>
+                            </button>
+                            <button type="button" id="btn-vender-final" class="btn-vender flex-grow-1" onclick="abrirModalPago()" disabled>
+                                <i class="bi bi-credit-card-2-front me-1"></i> Cobrar Pedido
+                            </button>
+                        </div>
+                        <button type="button" id="retry-split-payment" class="btn btn-sm btn-outline-warning mt-2 d-none" onclick="abrirModalPago(true)">Reintentar subcuenta pendiente</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal de Pago Premium -->
+<div class="modal fade" id="modalPago" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+        <div class="modal-content" style="background:#1A1D2E; border:1px solid rgba(255,255,255,0.1); border-radius:20px; color:#fff; overflow:hidden;">
+            <!-- Header -->
+            <div class="modal-header border-0 pb-0 px-4 pt-4">
+                <div>
+                    <h5 class="modal-title fw-bold fs-5"><i class="bi bi-credit-card-2-front-fill me-2" style="color:var(--primary)"></i>Método de Pago</h5>
+                    <div class="mt-1" style="color:rgba(255,255,255,0.5); font-size:0.82rem">Total a cobrar: <strong class="text-success fs-6" id="modal-total-display">$0.00</strong></div>
+                </div>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body px-4 py-3">
+                <!-- Tabs de Método de Pago -->
+                <div class="d-flex gap-2 mb-4">
+                    <button class="payment-tab active" id="tab-efectivo" onclick="selectPaymentTab('efectivo')">
+                        <i class="bi bi-cash-coin"></i> Efectivo
+                    </button>
+                    <button class="payment-tab" id="tab-tarjeta" onclick="selectPaymentTab('tarjeta')">
+                        <i class="bi bi-credit-card"></i> Tarjeta
+                    </button>
+                    <button class="payment-tab" id="tab-mixto" onclick="selectPaymentTab('mixto')">
+                        <i class="bi bi-intersect"></i> Mixto
+                    </button>
+                </div>
+
+                <!-- Panel: Efectivo -->
+                <div id="panel-efectivo">
+                    <label class="form-label">Monto recibido del cliente</label>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text border-0" style="background:rgba(255,255,255,0.05); color:#fff; border-radius:12px 0 0 12px;">$</span>
+                        <input type="number" id="inp-efectivo-total" class="form-control border-0" step="0.01" min="0" placeholder="0.00" oninput="calcularCambio()"
+                               style="background:rgba(255,255,255,0.05); color:#fff; border-radius:0 12px 12px 0; font-size:1.5rem; font-weight:700;">
+                    </div>
+                    <!-- Botones de acceso rápido -->
+                    <div class="d-flex flex-wrap gap-2 mb-4" id="quick-cash-btns"></div>
+                    <!-- Cambio -->
+                    <div class="d-flex justify-content-between align-items-center p-3" style="background:rgba(16,185,129,0.1); border-radius:12px; border:1px solid rgba(16,185,129,0.2)">
+                        <span style="color:rgba(255,255,255,0.7)">💰 Cambio</span>
+                        <span class="fw-bold fs-5" id="cambio-display" style="color:#34d399">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Panel: Tarjeta -->
+                <div id="panel-tarjeta" class="d-none">
+                    <div class="text-center py-4">
+                        <div style="font-size:3rem">💳</div>
+                        <p class="mt-3 mb-1 fw-bold fs-5">Cobrar con Terminal</p>
+                        <p style="color:rgba(255,255,255,0.5); font-size:0.88rem">El total se cargará íntegramente a tarjeta.</p>
+                        <div class="p-3 mt-3" style="background:rgba(78,149,255,0.1); border-radius:12px; border:1px solid rgba(78,149,255,0.25)">
+                            <span class="fw-bold fs-4" style="color:#4e95ff" id="tarjeta-total-display">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel: Mixto -->
+                <div id="panel-mixto" class="d-none">
+                    <p style="font-size:0.82rem; color:rgba(255,255,255,0.5); margin-bottom:1rem;">Divide el pago entre efectivo y tarjeta. El resto del total se calculará automáticamente.</p>
+                    <label class="form-label">Pago con Tarjeta ($)</label>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text border-0" style="background:rgba(78,149,255,0.15); color:#4e95ff; border-radius:12px 0 0 12px;">💳</span>
+                        <input type="number" id="inp-mixto-tarjeta" class="form-control border-0" step="0.01" min="0" placeholder="0.00" oninput="calcularMixto()"
+                               style="background:rgba(255,255,255,0.05); color:#fff; border-radius:0 12px 12px 0;">
+                    </div>
+                    <div class="d-flex justify-content-between p-3 mb-3" style="background:rgba(16,185,129,0.1); border-radius:12px; border:1px solid rgba(16,185,129,0.2)">
+                        <span style="color:rgba(255,255,255,0.7)">💵 Saldo en Efectivo</span>
+                        <span class="fw-bold" id="mixto-efectivo-display" style="color:#34d399">$0.00</span>
+                    </div>
+                    <div class="justify-content-between p-3 d-none" id="mixto-alerta"
+                         style="background:rgba(239,68,68,0.1); border-radius:12px; border:1px solid rgba(239,68,68,0.2);">
+                        <span style="color:#f87171"><i class="bi bi-exclamation-triangle"></i> Tarjeta excede el total</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                <button type="button" class="btn btn-secondary w-100 mb-2" data-bs-dismiss="modal" 
+                        style="background:rgba(255,255,255,0.05); border:1px solid var(--border); color:#fff; border-radius:12px; padding:.75rem">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirmar-pago" class="btn w-100" onclick="confirmarPago()"
+                        style="background:linear-gradient(135deg,#2AB6A1,#1E8E7C); border:none; border-radius:12px; color:#fff; font-weight:700; font-size:1rem; padding:.85rem; box-shadow:0 4px 15px rgba(42,182,161,0.4)">
+                    <i class="bi bi-check2-circle me-2"></i>Cobrar y Generar Ticket
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<!-- Modal Dividir Cuenta -->
+<div class="modal fade" id="modalDividir" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
+        <div class="modal-content" style="background:#1A1D2E; border:1px solid rgba(255,255,255,0.1); border-radius:20px; color:#fff;">
+            <div class="modal-header border-0 pb-0 px-4 pt-4">
+                <h5 class="modal-title fw-bold fs-5"><i class="bi bi-layout-split me-2 text-warning"></i>Dividir Cuenta</h5>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <p style="font-size:0.85rem; color:rgba(255,255,255,0.5);">Selecciona la cantidad de cada artículo que deseas cobrar en <b>esta subcuenta</b>.</p>
+                <div id="split-items-container" style="max-height:300px; overflow-y:auto; padding-right:10px;">
+                    <!-- Items rendered by JS -->
+                </div>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                <button type="button" class="btn btn-secondary w-100 mb-2" data-bs-dismiss="modal" style="background:rgba(255,255,255,0.05); border:none; color:rgba(255,255,255,0.7); border-radius:12px; padding:10px; font-weight:600;">Cancelar</button>
+                <button type="button" class="btn btn-success w-100 m-0" onclick="procesarSubcuenta()" style="background:#10b981; border:none; border-radius:12px; padding:12px; font-weight:700;">
+                    Cobrar Subcuenta (<span id="split-total-display">$0.00</span>)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/js/pos-cart-context.js}"></script>
+<script>
+    let cart = [];
+    let currentCategoryId = null;
+    let isSplitActive = false;
+    let splitCartToPay = [];
+    let pendingSale = null;
+    let splitSelection = [];
+    let skipPagehideSave = false;
+    const posContext = PosCartContexts.forMesa(
+        document.querySelector('#checkout-form [name="mesaId"]')?.value);
+
+    function saveContext() {
+        const state = {
+            cart: copyItems(cart), pendingSale, isSplitActive,
+            splitCartToPay: copyItems(splitCartToPay), splitSelection: copyItems(splitSelection),
+            clienteId: document.getElementById('select-cliente').value,
+            paymentTab: currentPaymentTab,
+            cashInput: document.getElementById('inp-efectivo-total').value,
+            cardInput: document.getElementById('inp-mixto-tarjeta').value
+        };
+        if (!state.cart.length && !state.pendingSale && !state.splitCartToPay.length && !state.clienteId) {
+            PosCartContexts.clear(posContext);
+        } else {
+            PosCartContexts.write(posContext, state);
+        }
+    }
+
+    function copyItems(items) {
+        return items.map(item => ({ ...item }));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const saved = PosCartContexts.read(posContext);
+        cart = saved ? copyItems(saved.cart) : [];
+        pendingSale = saved?.pendingSale || null;
+        isSplitActive = Boolean(saved?.isSplitActive);
+        splitCartToPay = copyItems(saved?.splitCartToPay || []);
+        splitSelection = copyItems(saved?.splitSelection || []);
+        currentPaymentTab = saved?.paymentTab || 'efectivo';
+        document.getElementById('select-cliente').value = saved?.clienteId || '';
+        document.getElementById('inp-efectivo-total').value = saved?.cashInput || '';
+        document.getElementById('inp-mixto-tarjeta').value = saved?.cardInput || '';
+
+        const legacy = PosCartContexts.legacyStatus(posContext);
+        const warning = document.getElementById('pos-legacy-warning');
+        warning.classList.toggle('d-none', !legacy);
+        if (legacy) {
+            document.getElementById('pos-legacy-message').textContent = legacy.reason ||
+                'Hay un carrito anterior sin mesa confirmada. Elige dónde usarlo o descártalo.';
+            document.getElementById('pos-legacy-adopt').disabled = !legacy.canAdopt;
+        }
+
+        const success = document.getElementById('pos-sale-success');
+        const error = document.getElementById('pos-sale-error');
+        if (pendingSale && success && success.dataset.saleKey === pendingSale.key) {
+            cart = pendingSale.remainingCart;
+            pendingSale = null;
+            isSplitActive = false;
+            splitCartToPay = [];
+            splitSelection = [];
+            if (cart.length === 0) document.getElementById('select-cliente').value = '';
+        } else if (pendingSale && error && error.dataset.saleKey === pendingSale.key) {
+            // El servidor rechazó este intento. El carrito sigue intacto y el mismo payload conserva su clave.
+            pendingSale.failed = true;
+        }
+        if (pendingSale && pendingSale.split) {
+            isSplitActive = true;
+            splitCartToPay = copyItems(pendingSale.attemptedCart);
+            splitSelection = cart.map((item, index) => ({
+                ...item,
+                qtySelected: splitCartToPay.find(line => line.cartIndex === index)?.cantidad || 0
+            }));
+            document.getElementById('retry-split-payment').classList.remove('d-none');
+        }
+        if (pendingSale) document.getElementById('select-cliente').value = pendingSale.clienteId || '';
+        renderCart();
+        if (isSplitActive) renderSplitItems();
+        document.getElementById('pos-legacy-adopt').onclick = () => {
+            if (PosCartContexts.resolveLegacy(posContext, true)) {
+                skipPagehideSave = true;
+                location.reload();
+            }
+        };
+        document.getElementById('pos-legacy-discard').onclick = () => {
+            if (confirm('¿Descartar el carrito anterior sin contexto confirmado?')) {
+                PosCartContexts.resolveLegacy(posContext, false);
+                warning.classList.add('d-none');
+            }
+        };
+        document.getElementById('select-cliente').addEventListener('change', saveContext);
+        document.getElementById('inp-efectivo-total').addEventListener('input', saveContext);
+        document.getElementById('inp-mixto-tarjeta').addEventListener('input', saveContext);
+    });
+    window.addEventListener('pagehide', () => { if (!skipPagehideSave) saveContext(); });
+
+    function setCategory(catId, btn) {
+        currentCategoryId = catId;
+        // Update active class on pills
+        document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filterProducts();
+    }
+
+    function filterProducts() {
+        const query = document.getElementById('pos-search').value.toLowerCase();
+        const products = document.querySelectorAll('.product-col');
+        let visibleCount = 0;
+
+        products.forEach(prod => {
+            const nombre = prod.dataset.nombre;
+            const catId = prod.dataset.categoriaId;
+            
+            const matchesSearch = nombre.includes(query);
+            const matchesCategory = (currentCategoryId === null) || (catId == currentCategoryId);
+
+            if (matchesSearch && matchesCategory) {
+                prod.classList.remove('d-none');
+                visibleCount++;
+            } else {
+                prod.classList.add('d-none');
+            }
+        });
+
+        const noResults = document.getElementById('no-results');
+        if (visibleCount === 0) {
+            noResults.classList.remove('d-none');
+        } else {
+            noResults.classList.add('d-none');
+        }
+    }
+
+    function addToCart(btn) {
+        const id = parseInt(btn.dataset.id);
+        const name = btn.dataset.nombre;
+        const price = parseFloat(btn.dataset.precio);
+        const puntosPrecio = parseInt(btn.dataset.puntosPrecio) || 0;
+        
+        const index = cart.findIndex(item => item.id === id && !item.canjeado); // Keep separate if one is paid and other is redeemed? Actually better to just toggle.
+        // Let's simplify: if you add more, it adds to the normal one.
+        const existing = cart.find(item => item.id === id && !item.canjeado);
+        if (existing) {
+            existing.cantidad += 1;
+        } else {
+            cart.push({ id, name, price, puntosPrecio, cantidad: 1, canjeado: false });
+        }
+        renderCart();
+    }
+
+    function toggleCanje(index) {
+        const item = cart[index];
+        if (item.canjeado) {
+            // Already redeemed, switch back to paid
+            item.canjeado = false;
+        } else {
+            if (item.puntosPrecio > 0) {
+                item.canjeado = true;
+            } else {
+                alert("Este producto no es canjeable por puntos.");
+                return;
+            }
+        }
+        renderCart();
+    }
+
+    function removeFromCart(id) {
+        cart = cart.filter(item => item.id !== id);
+        renderCart();
+    }
+
+    function changeQty(index, delta) {
+        if (index > -1) {
+            cart[index].cantidad += delta;
+            if (cart[index].cantidad < 1) {
+                cart.splice(index, 1);
+            }
+        }
+        renderCart();
+    }
+
+    function updateNota(index, text) {
+        if (cart[index]) {
+            cart[index].nota = text;
+            if (isSplitActive) {
+                splitCartToPay.filter(item => item.cartIndex === index).forEach(item => item.nota = text);
+                if (splitSelection[index]) splitSelection[index].nota = text;
+            }
+            saveContext();
+            renderHiddenInputs();
+        }
+    }
+
+    // ══════════════════════════════════════
+    // MÓDULO DE MÉTODOS DE PAGO
+    // ══════════════════════════════════════
+    let currentPaymentTab = 'efectivo';
+
+    function abrirModalPago(fromSplit = false) {
+        if (!fromSplit) {
+            isSplitActive = false;
+        }
+        if (isSplitActive && splitCartToPay.length === 0) return;
+        if (!isSplitActive && cart.length === 0) return;
+
+        renderHiddenInputs();
+        const total = calcCurrentTotal();
+        document.getElementById('modal-total-display').textContent = '$' + total.toFixed(2);
+        document.getElementById('tarjeta-total-display').textContent = '$' + total.toFixed(2);
+        // Generar botones de cambio rápido
+        const btns = document.getElementById('quick-cash-btns');
+        btns.innerHTML = '';
+        const denominaciones = [total, Math.ceil(total / 10) * 10, Math.ceil(total / 50) * 50, Math.ceil(total / 100) * 100, 200, 500];
+        const uniques = [...new Set(denominaciones.filter(d => d >= total))].slice(0, 5);
+        uniques.forEach(d => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'quick-cash-btn';
+            btn.textContent = '$' + d.toFixed(0);
+            btn.onclick = () => { document.getElementById('inp-efectivo-total').value = d; calcularCambio(); };
+            btns.appendChild(btn);
+        });
+        document.getElementById('inp-efectivo-total').value = '';
+        document.getElementById('cambio-display').textContent = '$0.00';
+        selectPaymentTab('efectivo');
+        const lines = (isSplitActive ? splitCartToPay : cart).map(item =>
+            [item.id, item.cantidad, item.nota || '', item.canjeado]);
+        if (pendingSale && pendingSale.split === isSplitActive &&
+                JSON.stringify(pendingSale.attemptedCart.map(item =>
+                    [item.id, item.cantidad, item.nota || '', item.canjeado])) === JSON.stringify(lines)) {
+            document.getElementById('select-cliente').value = pendingSale.clienteId || '';
+            selectPaymentTab(pendingSale.paymentTab);
+            document.getElementById('inp-efectivo-total').value = pendingSale.cashInput || '';
+            document.getElementById('inp-mixto-tarjeta').value = pendingSale.cardInput || '';
+            if (pendingSale.paymentTab === 'efectivo') calcularCambio();
+            if (pendingSale.paymentTab === 'mixto') calcularMixto();
+        }
+        new bootstrap.Modal(document.getElementById('modalPago')).show();
+    }
+
+    function selectPaymentTab(tab) {
+        currentPaymentTab = tab;
+        ['efectivo', 'tarjeta', 'mixto'].forEach(t => {
+            document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+            document.getElementById('panel-' + t).classList.toggle('d-none', t !== tab);
+        });
+    }
+
+    function calcCurrentTotal() {
+        const targetCart = isSplitActive ? splitCartToPay : cart;
+        return targetCart.reduce((sum, item) => sum + (item.canjeado ? 0 : item.price * item.cantidad), 0);
+    }
+    
+    function calcPuntosRequeridos() {
+        const targetCart = isSplitActive ? splitCartToPay : cart;
+        return targetCart.reduce((sum, item) => sum + (item.canjeado ? item.puntosPrecio * item.cantidad : 0), 0);
+    }
+
+    function calcularCambio() {
+        const total = calcCurrentTotal();
+        const recibido = parseFloat(document.getElementById('inp-efectivo-total').value) || 0;
+        const cambio = recibido - total;
+        document.getElementById('cambio-display').textContent = cambio >= 0 ? '$' + cambio.toFixed(2) : '-$' + Math.abs(cambio).toFixed(2);
+        document.getElementById('cambio-display').style.color = cambio >= 0 ? '#34d399' : '#f87171';
+    }
+
+    function calcularMixto() {
+        const total = calcCurrentTotal();
+        const tarjeta = parseFloat(document.getElementById('inp-mixto-tarjeta').value) || 0;
+        const excede = tarjeta > total;
+        const efectivo = excede ? 0 : total - tarjeta;
+        document.getElementById('mixto-efectivo-display').textContent = '$' + efectivo.toFixed(2);
+        // Mostrar/ocultar alerta de exceso
+        const alerta = document.getElementById('mixto-alerta');
+        if (excede) {
+            alerta.classList.remove('d-none');
+            alerta.classList.add('d-flex');
+        } else {
+            alerta.classList.add('d-none');
+            alerta.classList.remove('d-flex');
+        }
+        // Deshabilitar botón confirmar si excede
+        document.getElementById('btn-confirmar-pago').disabled = excede;
+    }
+
+    function confirmarPago() {
+        const total = calcCurrentTotal();
+        let metodo, efectivo, tarjeta;
+
+        if (currentPaymentTab === 'efectivo') {
+            metodo = 'EFECTIVO';
+            efectivo = parseFloat(document.getElementById('inp-efectivo-total').value) || total;
+            tarjeta = 0;
+        } else if (currentPaymentTab === 'tarjeta') {
+            metodo = 'TARJETA';
+            efectivo = 0;
+            tarjeta = total;
+        } else { // mixto
+            const t = parseFloat(document.getElementById('inp-mixto-tarjeta').value) || 0;
+            if (t > total) {
+                alert('⚠️ El monto con tarjeta ($' + t.toFixed(2) + ') no puede exceder el total ($' + total.toFixed(2) + ').');
+                return;
+            }
+            if (t <= 0) {
+                alert('⚠️ Ingrese un monto válido para tarjeta.');
+                return;
+            }
+            metodo = 'MIXTO';
+            tarjeta = t;
+            efectivo = total - t;
+        }
+
+        // Validación de Canjes
+        const puntosRequeridos = calcPuntosRequeridos();
+        const clienteId = document.getElementById('select-cliente').value;
+        
+        if (puntosRequeridos > 0) {
+            if (!clienteId) {
+                alert('⚠️ Para realizar canjes de puntos debe seleccionar un cliente.');
+                return;
+            }
+            // Podríamos validar aquí los puntos del cliente si los tenemos en el frontend, 
+            // pero el servidor ya lo hace de forma segura.
+        }
+
+        document.getElementById('field-metodoPago').value = metodo;
+        document.getElementById('field-montoEfectivo').value = efectivo.toFixed(2);
+        document.getElementById('field-montoTarjeta').value = tarjeta.toFixed(2);
+        document.getElementById('field-clienteId').value = clienteId;
+        
+        const form = document.getElementById('checkout-form');
+        const targetCart = isSplitActive ? splitCartToPay : cart;
+        const attemptedCart = copyItems(targetCart);
+        const payload = JSON.stringify({
+            lines: attemptedCart.map(item => [item.id, item.cantidad, item.nota || '', item.canjeado]),
+            metodo, efectivo: efectivo.toFixed(2), tarjeta: tarjeta.toFixed(2), clienteId,
+            mesaId: form.querySelector('[name="mesaId"]')?.value || ''
+        });
+        saveContext();
+        if (pendingSale && !pendingSale.failed && pendingSale.signature !== payload) {
+            alert('El cobro anterior no tiene un resultado confirmado. Reintenta el mismo cobro o verifica el ticket antes de cambiarlo.');
+            return;
+        }
+        const key = pendingSale && pendingSale.signature === payload
+            ? pendingSale.key : crypto.randomUUID();
+        const remainingCart = copyItems(cart);
+        if (isSplitActive) {
+            attemptedCart.forEach(item => {
+                const remaining = remainingCart[item.cartIndex];
+                if (remaining) remaining.cantidad -= item.cantidad;
+            });
+        }
+        pendingSale = {
+            key, signature: payload, attemptedCart, split: isSplitActive, clienteId,
+            paymentTab: currentPaymentTab,
+            cashInput: document.getElementById('inp-efectivo-total').value,
+            cardInput: document.getElementById('inp-mixto-tarjeta').value,
+            remainingCart: isSplitActive ? remainingCart.filter(item => item.cantidad > 0) : [],
+            failed: false
+        };
+        saveContext();
+        form.elements['idempotencyKey'].value = key;
+        renderHiddenInputs();
+        document.getElementById('btn-confirmar-pago').disabled = true;
+        form.submit();
+    }
+
+    function renderHiddenInputs() {
+        const hiddenInputs = document.getElementById('hidden-inputs');
+        hiddenInputs.replaceChildren();
+        const targetCart = isSplitActive ? splitCartToPay : cart;
+        targetCart.forEach(item => {
+            for (const [name, value] of Object.entries({
+                productoId: item.id,
+                cantidadVendida: item.cantidad,
+                notas: item.nota || '',
+                esCanjeado: item.canjeado
+            })) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = String(value);
+                hiddenInputs.appendChild(input);
+            }
+        });
+    }
+
+    function appendText(parent, tag, className, value) {
+        const node = document.createElement(tag);
+        node.className = className;
+        node.textContent = value;
+        parent.appendChild(node);
+        return node;
+    }
+
+    function quantityButton(parent, icon, index, delta, forSplit = false) {
+        const button = appendText(parent, 'button', 'btn btn-sm btn-link text-muted p-0', '');
+        button.type = 'button';
+        button.style.textDecoration = 'none';
+        appendText(button, 'i', 'bi ' + icon, '');
+        button.addEventListener('click', () => forSplit ? changeSplitQty(index, delta) : changeQty(index, delta));
+    }
+
+    function renderCart() {
+        const container = document.getElementById('cart-items');
+        const btnVender = document.getElementById('btn-vender-final');
+        const btnDividir = document.getElementById('btn-dividir');
+        saveContext();
+        container.replaceChildren();
+        btnVender.disabled = cart.length === 0;
+        if (btnDividir) btnDividir.disabled = cart.length === 0;
+
+        if (cart.length === 0) {
+            appendText(container, 'p', 'text-muted text-center py-4', 'No hay platillos seleccionados');
+            document.getElementById('total').innerText = '$0.00';
+            document.getElementById('subtotal').innerText = '$0.00';
+            renderHiddenInputs();
+            return;
+        }
+
+        let total = 0;
+        cart.forEach((item, index) => {
+            const sub = item.canjeado ? 0 : item.price * item.cantidad;
+            const ptsTotal = item.canjeado ? item.puntosPrecio * item.cantidad : 0;
+            total += sub;
+            const row = appendText(container, 'div', 'ticket-item flex-column align-items-stretch', '');
+            row.style.cssText = 'border-bottom:1px solid var(--border); padding:0.75rem 0';
+            const top = appendText(row, 'div', 'd-flex justify-content-between align-items-center', '');
+            const description = appendText(top, 'div', '', '');
+            description.style.flexGrow = '1';
+            const title = appendText(description, 'div', 'fw-bold', (item.canjeado ? '🎁 ' : '') + item.name);
+            title.style.fontSize = '0.9rem';
+            const price = appendText(description, 'div', 'text-muted small',
+                item.canjeado ? 'Canje por ' + item.puntosPrecio + ' pts' : '$' + item.price.toFixed(2) + ' c/u');
+            price.style.opacity = '0.8';
+            const qty = appendText(top, 'div', 'd-flex align-items-center gap-2', '');
+            qty.style.cssText = 'background:rgba(255,255,255,0.08); padding:2px 8px; border-radius:8px';
+            quantityButton(qty, 'bi-dash-lg', index, -1);
+            const qtyLabel = appendText(qty, 'span', 'px-2', String(item.cantidad));
+            qtyLabel.style.cssText = 'font-size:0.9rem; font-weight:700; color:#fff';
+            quantityButton(qty, 'bi-plus-lg', index, 1);
+            const amountBox = appendText(top, 'div', 'ms-3 text-end', '');
+            amountBox.style.minWidth = '70px';
+            const amount = appendText(amountBox, 'div', 'fw-bold',
+                item.canjeado ? ptsTotal + ' pts' : '$' + sub.toFixed(2));
+            amount.style.color = item.canjeado ? '#a78bfa' : 'var(--text-main)';
+
+            const bottom = appendText(row, 'div', 'd-flex gap-2 mt-2 align-items-center', '');
+            const note = appendText(bottom, 'input', 'form-control form-control-sm border-0', '');
+            note.type = 'text';
+            note.placeholder = 'Instrucción especial...';
+            note.value = item.nota || '';
+            note.style.cssText = 'background:rgba(255,255,255,0.03); color:var(--primary); font-size:0.75rem; border-radius:6px; flex-grow:1';
+            note.addEventListener('input', () => updateNota(index, note.value));
+            if (item.puntosPrecio > 0) {
+                const redeem = appendText(bottom, 'button',
+                    'btn btn-sm ' + (item.canjeado ? 'btn-success' : 'btn-outline-warning'), '');
+                redeem.type = 'button';
+                redeem.style.cssText = 'font-size:0.7rem; border-radius:6px; padding:2px 8px';
+                appendText(redeem, 'i', item.canjeado ? 'bi bi-cash' : 'bi bi-gift', '');
+                redeem.appendChild(document.createTextNode(item.canjeado ? ' Cobrar' : ' Canjear'));
+                redeem.addEventListener('click', () => toggleCanje(index));
+            }
+        });
+        document.getElementById('total').innerText = '$' + total.toFixed(2);
+        document.getElementById('subtotal').innerText = '$' + total.toFixed(2);
+        renderHiddenInputs();
+    }
+    // ══════════════════════════════════════
+    // MÓDULO DE DIVISIÓN DE CUENTAS
+    // ══════════════════════════════════════
+    function abrirModalDividir() {
+        if (cart.length === 0) return;
+        if (!isSplitActive || splitSelection.length !== cart.length) {
+            splitSelection = cart.map(item => ({ ...item, qtySelected: 0 }));
+        }
+        renderSplitItems();
+        saveContext();
+        new bootstrap.Modal(document.getElementById('modalDividir')).show();
+    }
+
+    function changeSplitQty(index, delta) {
+        const item = splitSelection[index];
+        item.qtySelected += delta;
+        if (item.qtySelected < 0) item.qtySelected = 0;
+        if (item.qtySelected > item.cantidad) item.qtySelected = item.cantidad;
+        renderSplitItems();
+    }
+
+    function renderSplitItems() {
+        const container = document.getElementById('split-items-container');
+        container.replaceChildren();
+        let total = 0;
+        splitSelection.forEach((item, idx) => {
+            if (item.cantidad <= 0) return;
+            const sub = item.canjeado ? 0 : item.price * item.qtySelected;
+            total += sub;
+            const row = appendText(container, 'div', 'd-flex justify-content-between align-items-center mb-3 p-3', '');
+            row.style.cssText = 'background:rgba(255,255,255,0.05); border-radius:12px; border:1px solid rgba(255,255,255,0.1)';
+            const description = appendText(row, 'div', '', '');
+            description.style.flexGrow = '1';
+            appendText(description, 'div', 'fw-bold', item.name);
+            appendText(description, 'div', 'small text-muted',
+                (item.canjeado ? 'Canjeado' : '$' + item.price.toFixed(2) + ' c/u') + ' (Disp: ' + item.cantidad + ')');
+            const qty = appendText(row, 'div', 'd-flex align-items-center gap-2', '');
+            qty.style.cssText = 'background:rgba(255,255,255,0.1); padding:2px 8px; border-radius:8px';
+            quantityButton(qty, 'bi-dash-lg', idx, -1, true);
+            const qtyLabel = appendText(qty, 'span', 'px-2 fw-bold', String(item.qtySelected));
+            qtyLabel.style.color = '#fff';
+            quantityButton(qty, 'bi-plus-lg', idx, 1, true);
+            const amountBox = appendText(row, 'div', 'ms-3 text-end', '');
+            amountBox.style.minWidth = '60px';
+            appendText(amountBox, 'div', 'fw-bold text-success', '$' + sub.toFixed(2));
+        });
+        document.getElementById('split-total-display').textContent = '$' + total.toFixed(2);
+        saveContext();
+    }
+
+    function procesarSubcuenta() {
+        splitCartToPay = splitSelection
+            .map((item, index) => ({ ...item, cartIndex: index, cantidad: item.qtySelected }))
+            .filter(item => item.cantidad > 0);
+        if (splitCartToPay.length === 0) {
+            alert('Selecciona al menos un artículo para cobrar.');
+            return;
+        }
+        isSplitActive = true;
+        saveContext();
+        bootstrap.Modal.getInstance(document.getElementById('modalDividir')).hide();
+        abrirModalPago(true);
+    }
+</script>
+</body>
+</html>

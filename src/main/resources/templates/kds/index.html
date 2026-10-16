@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<style> 
+    .main-content { margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; padding: 2rem 2.5rem; }
+    @media (max-width: 768px) {
+        .main-content { margin-left: 0 !important; padding: 1rem !important; padding-top: 4.5rem !important; }
+    }
+    
+    /* Header del KDS */
+    .kds-header {
+        background: rgba(26, 29, 46, 0.4);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* Grid del KDS */
+    .kds-grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+        gap: 1.5rem; 
+    }
+    
+    /* Tarjeta estilo Ticket / Glass */
+    .ticket-card { 
+        background: rgba(26, 29, 46, 0.6); 
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255,255,255,0.08); 
+        border-radius: 24px; 
+        padding: 1.5rem; 
+        display: flex; 
+        flex-direction: column; 
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .ticket-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 4px; height: 100%;
+        background: var(--status-color, #3b82f6);
+    }
+    .ticket-card:hover { transform: translateY(-5px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); }
+    
+    /* Estados por color */
+    .ticket-card.status-pendiente  { --status-color: #3b82f6; }
+    .ticket-card.status-preparando { --status-color: #f59e0b; }
+    .ticket-card.status-urgente    { --status-color: #ef4444; border-color: rgba(239, 68, 68, 0.3); animation: pulse-border 2s infinite; }
+
+    @keyframes pulse-border {
+        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.2); }
+        70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .ticket-header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 1rem; 
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .order-num { font-size: 1.25rem; font-weight: 800; color: #fff; }
+    .wait-timer { 
+        font-size: 0.8rem; 
+        font-weight: 700; 
+        padding: 0.35rem 0.75rem; 
+        border-radius: 50px; 
+        background: rgba(255,255,255,0.05);
+        color: var(--text-muted);
+        display: flex; align-items: center; gap: 0.4rem;
+    }
+    .wait-timer.urgente { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+    .ticket-body { flex-grow: 1; }
+    .item-row { margin-bottom: 0.75rem; }
+    .item-qty { font-weight: 800; color: var(--primary); font-size: 1.1rem; margin-right: 0.6rem; }
+    .item-name { font-weight: 600; color: #fff; font-size: 1.05rem; }
+    .item-notes { 
+        font-size: 0.8rem; 
+        color: #fca5a5; 
+        background: rgba(239,68,68,0.1); 
+        padding: 0.6rem 0.8rem; 
+        border-radius: 12px; 
+        margin-top: 0.5rem; 
+        border-left: 3px solid #ef4444;
+    }
+    
+    .ticket-footer { margin-top: 1.5rem; }
+    .btn-action-kds {
+        width: 100%;
+        border: none;
+        padding: 0.85rem;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+    }
+    .btn-prepare { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+    .btn-prepare:hover { background: #f59e0b; color: #fff; transform: scale(1.02); }
+    .btn-done { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+    .btn-done:hover { background: #10b981; color: #fff; transform: scale(1.02); }
+
+    /* Dashboard Stats KDS */
+    .kds-stats-bar {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .stat-kds {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .stat-kds .val { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+    .stat-kds .lbl { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-kds i { font-size: 1.4rem; opacity: 0.8; }
+
+    /* Animaciones */
+    @keyframes slideInUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeOutUp {
+        from { transform: translateY(0); opacity: 1; }
+        to { transform: translateY(-30px); opacity: 0; }
+    }
+    .ticket-card { animation: slideInUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .ticket-exit { animation: fadeOutUp 0.5s ease forwards; pointer-events: none; }
+
+    .empty-state { text-align: center; padding: 6rem 0; opacity: 0.5; }
+    .empty-state i { font-size: 5rem; display: block; margin-bottom: 1rem; }
+</style>
+
+<main class="main-content">
+    <div class="kds-header">
+        <div>
+            <h1 class="h3 mb-1 fw-800" style="color:#fff;">🔪 Monitor de Cocina 2.0</h1>
+            <p class="mb-0 text-muted" style="font-size:0.85rem;">Gestión de órdenes activas en tiempo real</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <div id="kds-clock" class="fw-700 text-white opacity-75">00:00:00</div>
+            <button class="btn btn-sm-icon" onclick="fetchKdsData()" title="Actualizar ahora">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Dashboard de Estadísticas -->
+    <div class="kds-stats-bar">
+        <div class="stat-kds" style="border-color: rgba(59, 130, 246, 0.2);">
+            <i class="bi bi-list-task text-primary"></i>
+            <div>
+                <div class="val text-white" id="stat-pendientes">0</div>
+                <div class="lbl">Pendientes</div>
+            </div>
+        </div>
+        <div class="stat-kds" style="border-color: rgba(245, 158, 11, 0.2);">
+            <i class="bi bi-fire" style="color: #f59e0b;"></i>
+            <div>
+                <div class="val" style="color: #f59e0b;" id="stat-preparando">0</div>
+                <div class="lbl">En Proceso</div>
+            </div>
+        </div>
+        <div class="stat-kds" style="border-color: rgba(239, 68, 68, 0.3);">
+            <i class="bi bi-exclamation-octagon text-danger"></i>
+            <div>
+                <div class="val text-danger" id="stat-urgentes">0</div>
+                <div class="lbl">Urgentes (+10m)</div>
+            </div>
+        </div>
+        <div class="stat-kds" style="border-color: rgba(16, 185, 129, 0.2);">
+            <i class="bi bi-check2-all text-success"></i>
+            <div>
+                <div class="val text-success" id="stat-listos">0</div>
+                <div class="lbl">Listos (Hoy)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid de Pedidos -->
+    <div class="kds-grid" id="kds-grid-container">
+        <!-- Los tickets se cargarán vía AJAX -->
+        <div class="empty-state w-100" style="grid-column: 1 / -1;">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <h4>Cargando monitor...</h4>
+        </div>
+    </div>
+</main>
+
+<script th:inline="javascript">
+    let lastOrderCount = -1;
+    let autoRefreshTimer = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        fetchKdsData(); // Carga inicial
+        autoRefreshTimer = setInterval(fetchKdsData, 10000); // Polling cada 10s
+        
+        setInterval(updateTimersOnly, 1000); // Actualizar cronómetros cada segundo
+    });
+
+    function updateClock() {
+        const clockEl = document.getElementById('kds-clock');
+        if (clockEl) clockEl.textContent = new Date().toLocaleTimeString();
+    }
+
+    async function fetchKdsData() {
+        try {
+            const response = await fetch('/kds/api/datos');
+            const data = await response.json();
+            
+            renderStats(data.stats);
+            renderGrid(data.pedidos, data.notificaciones);
+            
+            // Keep a baseline count without loading third-party audio assets.
+            const currentCount = data.pedidos.filter(p => p.estado === 'PENDIENTE').length;
+            lastOrderCount = currentCount;
+            
+        } catch (error) {
+            console.error("Error fetching KDS:", error);
+        }
+    }
+
+    function renderStats(stats) {
+        document.getElementById('stat-pendientes').textContent = stats.pendientes;
+        document.getElementById('stat-preparando').textContent = stats.preparando;
+        document.getElementById('stat-urgentes').textContent = stats.urgentes;
+        // stat-listos podría calcularse o venir del server, por ahora lo dejamos estático o sumamos
+    }
+
+    function renderGrid(pedidos, notificaciones) {
+        const container = document.getElementById('kds-grid-container');
+        
+        if (pedidos.length === 0 && (!notificaciones || notificaciones.length === 0)) {
+            container.innerHTML = `
+                <div class="empty-state w-100" style="grid-column: 1 / -1;">
+                    <i class="bi bi-check2-circle"></i>
+                    <h4>¡Cocina despejada!</h4>
+                    <p>No hay órdenes pendientes por el momento.</p>
+                </div>`;
+            return;
+        }
+
+        // Comparar IDs para saber si reconstruir el DOM
+        const currentData = Array.from(container.querySelectorAll('.ticket-card')).map(el => {
+            const badge = el.querySelector('.badge-modo');
+            return el.id + '-' + (badge ? badge.textContent : 'notif');
+        });
+        const newDataPedidos = pedidos.map(p => 'order-' + p.id + '-' + p.estado);
+        const newDataNotifs = (notificaciones || []).map(n => 'notif-' + n.id + '-notif');
+        const newData = [...newDataNotifs, ...newDataPedidos];
+        
+        if (JSON.stringify(currentData) === JSON.stringify(newData)) return;
+
+        // Only fixed markup is parsed. Every server-provided value is assigned as text
+        // or a DOM property, including sibling fields and notification ingredients.
+        const fragment = document.createDocumentFragment();
+        (notificaciones || []).forEach(n => {
+            const card = document.createElement('div');
+            card.className = 'ticket-card';
+            card.id = 'notif-' + n.id;
+            card.style.cssText = 'border-color:#fcd34d; animation:pulse-border 2s infinite;';
+            card.innerHTML = `
+                <div class="ticket-header" style="border-bottom-color:rgba(245,158,11,.2)">
+                    <div class="order-num" style="color:#fcd34d"><i class="bi bi-robot me-2"></i>Ventro AI</div>
+                    <div class="wait-timer" style="background:rgba(245,158,11,.2);color:#fcd34d">
+                        <i class="bi bi-clock"></i> <span data-field="time"></span>
+                    </div>
+                </div>
+                <div class="ticket-body">
+                    <div class="item-name mb-2" style="font-size:1.1rem">Sugerencia Control de Mermas</div>
+                    <div class="item-notes" style="background:rgba(245,158,11,.1);border-left-color:#fcd34d;color:#fcd34d;font-size:.95rem">
+                        La IA sugiere crear un Especial del Día para aprovechar:<br><b style="font-size:1.2rem" data-field="ingredient"></b>
+                    </div>
+                </div>
+                <div class="ticket-footer">
+                    <button class="btn-action-kds" style="background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid rgba(245,158,11,.25)">
+                        <i class="bi bi-check2-all"></i> Marcar de Enterado
+                    </button>
+                </div>`;
+            card.querySelector('[data-field="time"]').textContent = (n.fecha.split('T')[1] || '').substring(0, 5);
+            card.querySelector('[data-field="ingredient"]').textContent = n.insumo;
+            card.querySelector('button').addEventListener('click', () => marcarNotificacionLeida(n.id));
+            fragment.append(card);
+        });
+        pedidos.forEach(p => {
+            const pending = p.estado === 'PENDIENTE';
+            const card = document.createElement('div');
+            card.className = 'ticket-card ' + (pending ? 'status-pendiente' : 'status-preparando');
+            card.id = 'order-' + p.id;
+            card.dataset.fecha = p.fecha;
+            card.innerHTML = `
+                <div class="ticket-header">
+                    <div class="order-num"></div>
+                    <div class="wait-timer"><i class="bi bi-stopwatch"></i> <span class="time-val">00:00</span></div>
+                </div>
+                <div class="ticket-body">
+                    <div class="item-row"><span class="item-qty"></span> <span class="item-name"></span></div>
+                    <div class="item-notes"><i class="bi bi-info-circle-fill me-1"></i> <span data-field="notes"></span></div>
+                    <div class="mt-3 d-flex align-items-center gap-2">
+                        <span class="badge-modo"></span><span class="text-muted" style="font-size:.7rem" data-field="user"></span>
+                    </div>
+                </div>
+                <div class="ticket-footer"><button class="btn-action-kds"><i class="bi"></i> <span data-field="action"></span></button></div>`;
+            card.querySelector('.order-num').textContent = '#' + p.ventaId;
+            card.querySelector('.item-qty').textContent = p.cantidad + 'x';
+            card.querySelector('.item-name').textContent = p.productoNombre;
+            card.querySelector('[data-field="notes"]').textContent = p.notas || '';
+            if (!p.notas) card.querySelector('.item-notes').remove();
+            const badge = card.querySelector('.badge-modo');
+            badge.classList.add(pending ? 'badge-nuevo' : 'badge-editar');
+            badge.textContent = p.estado;
+            card.querySelector('[data-field="user"]').textContent = 'Por: ' + p.usuario;
+            const button = card.querySelector('button');
+            button.classList.add(pending ? 'btn-prepare' : 'btn-done');
+            button.querySelector('i').classList.add(pending ? 'bi-fire' : 'bi-check-circle-fill');
+            button.querySelector('[data-field="action"]').textContent = pending ? 'Empezar Preparación' : 'Marcar como Listo';
+            button.addEventListener('click', () => cambiarEstado(p.id, pending ? 'PREPARANDO' : 'LISTO'));
+            fragment.append(card);
+        });
+        container.replaceChildren(fragment);
+        updateTimersOnly();
+    }
+
+    async function cambiarEstado(id, nuevoEstado) {
+        const card = document.getElementById('order-' + id);
+        
+        // Si el nuevo estado es LISTO, animamos la salida
+        if (nuevoEstado === 'LISTO') {
+            card.classList.add('ticket-exit');
+        }
+
+        const formData = new FormData();
+        formData.append('id', id);
+        formData.append('estado', nuevoEstado);
+        
+        // Obtener CSRF de meta tags
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+        
+        try {
+            const response = await fetch('/kds/actualizar-estado', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    [csrfHeader]: csrfToken
+                }
+            });
+            
+            if (!response.ok) throw new Error("Error en servidor");
+            
+            // Forzamos actualización rápida
+            setTimeout(fetchKdsData, nuevoEstado === 'LISTO' ? 500 : 100);
+        } catch (e) {
+            console.error("Error al cambiar estado:", e);
+            alert("No se pudo actualizar el estado. Revisa la consola.");
+            card.classList.remove('ticket-exit');
+        }
+    }
+
+    function updateTimersOnly() {
+        const now = new Date();
+        document.querySelectorAll('.ticket-card').forEach(card => {
+            const fecha = new Date(card.dataset.fecha);
+            const diffMs = now - fecha;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffSecs = Math.floor((diffMs % 60000) / 1000);
+            
+            const timerVal = card.querySelector('.time-val');
+            const timerBadge = card.querySelector('.wait-timer');
+            
+            if (timerVal) {
+                timerVal.textContent = `${diffMins.toString().padStart(2, '0')}:${diffSecs.toString().padStart(2, '0')}`;
+            }
+            
+            if (diffMins >= 10 && !card.id.startsWith('notif')) {
+                card.classList.add('status-urgente');
+                if (timerBadge) timerBadge.classList.add('urgente');
+            }
+        });
+    }
+
+    async function marcarNotificacionLeida(id) {
+        const card = document.getElementById('notif-' + id);
+        card.classList.add('ticket-exit');
+
+        const formData = new FormData();
+        formData.append('id', id);
+
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+        try {
+            await fetch('/kds/api/marcar-notificacion-leida', {
+                method: 'POST',
+                body: formData,
+                headers: csrfHeader && csrfToken ? { [csrfHeader]: csrfToken } : {}
+            });
+            setTimeout(fetchKdsData, 500);
+        } catch (e) {
+            console.error("Error al marcar notificación:", e);
+        }
+    }
+</script>
+</body>
+</html>

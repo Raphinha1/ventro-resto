@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<style>
+        h1 { font-size: 2.2rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+        .caja-status { border-radius: 20px; padding: 2rem; border: 1px solid; text-align: center; }
+        .caja-abierta { background: rgba(16,185,129,0.07); border-color: rgba(16,185,129,0.3); }
+        .caja-cerrada { background: rgba(255,255,255,0.03); border-color: var(--border); }
+        .stat-box { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; text-align: center; }
+        .stat-box .val { font-size: 1.6rem; font-weight: 800; }
+        .stat-box .lbl { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.2rem; }
+        .table-custom { width: 100%; border-collapse: collapse; color: var(--text-main); }
+        .table-custom th { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.55); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); }
+        .table-custom td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border); color: var(--text-main); vertical-align: middle; }
+        .badge-abierto { background: rgba(16,185,129,0.15); color: #34d399; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+        .badge-cerrado { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+        .diff-positivo { color: #34d399; font-weight: 700; }
+        .diff-negativo { color: #f87171; font-weight: 700; }
+    </style>
+<main class="main-content">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h1>💰 Corte de Caja</h1>
+            <p style="color:var(--text-muted); margin:0; font-size:.88rem;">Apertura, cierre y arqueo de turnos</p>
+        </div>
+        <div th:if="${cajaActiva == null}">
+            <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalApertura">
+                <i class="bi bi-cash-coin"></i> Abrir Turno
+            </button>
+        </div>
+    </div>
+
+    <!-- Flash -->
+    <div th:if="${mensajeExito}" class="alert border-0 mb-4 d-flex gap-2 align-items-center"
+         style="background:rgba(16,185,129,0.12); color:#34d399; border-radius:14px; font-weight:600;">
+        <i class="bi bi-check-circle-fill fs-5"></i><span th:text="${mensajeExito}"></span>
+    </div>
+    <div th:if="${mensajeError}" class="alert border-0 mb-4"
+         style="background:rgba(239,68,68,0.12); color:#f87171; border-radius:14px;" th:text="${mensajeError}"></div>
+
+    <!-- Estado de Caja Activa -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div th:if="${cajaActiva != null}" class="card-custom caja-abierta p-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span style="width:10px;height:10px;background:#34d399;border-radius:50%;display:inline-block;"></span>
+                            <span style="font-size:.75rem; font-weight:700; color:#34d399; text-transform:uppercase; letter-spacing:.08em;">TURNO ACTIVO</span>
+                        </div>
+                        <div style="font-size:1.4rem; font-weight:800; color:#fff;">
+                            Cajero: <span th:text="${cajaActiva.cajero != null ? cajaActiva.cajero.username : 'Sistema'}">admin</span>
+                        </div>
+                        <div style="color:var(--text-muted); font-size:.85rem;">
+                            Apertura: <span th:text="${#temporals.format(cajaActiva.fechaApertura, 'dd/MM/yyyy HH:mm')}">00:00</span>
+                            &nbsp;|&nbsp; Fondo inicial: <strong style="color:#fff;" th:text="'$' + ${cajaActiva.montoInicial}">$0</strong>
+                            &nbsp;|&nbsp; Ventas provisionales: <strong style="color:#fff;" th:text="'$' + ${totalVentasActivo}">$0</strong>
+                        </div>
+                    </div>
+                    <button type="button" th:onclick="|abrirModalCierre('/caja/cerrar/${cajaActiva.id}')|" class="btn"
+                       style="background:rgba(42,182,161,.2); color:#2AB6A1; border:1px solid rgba(42,182,161,.4); border-radius:12px; font-weight:700; padding:.75rem 1.5rem;">
+                        <i class="bi bi-lock-fill me-1"></i> Realizar Corte
+                    </button>
+                </div>
+            </div>
+            <div th:unless="${cajaActiva != null}" class="card-custom caja-cerrada p-3 text-center">
+                <i class="bi bi-cash-stack fs-1 mb-2" style="color:var(--text-muted);"></i>
+                <p style="color:var(--text-muted); margin:0;">No hay un turno abierto actualmente.</p>
+                <button class="btn-primary-custom mt-3 d-inline-flex" data-bs-toggle="modal" data-bs-target="#modalApertura">
+                    <i class="bi bi-play-circle-fill"></i> Iniciar Turno
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Cortes -->
+    <div class="card-custom p-0" style="overflow:hidden;">
+        <div class="p-4 border-bottom" style="border-color: var(--border)!important;">
+            <h5 class="mb-0 fw-bold" style="color:#fff;">📋 Historial de Turnos</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table-custom w-100">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Cajero</th>
+                        <th>Apertura</th>
+                        <th>Cierre</th>
+                        <th>Fondo Inicial</th>
+                        <th>Ventas Totales</th>
+                        <th>Diferencia</th>
+                        <th>Estado</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${historial}">
+                        <td style="font-weight:700;" th:text="${c.id}">1</td>
+                        <td>
+                            <span class="fw-600" th:text="${c.cajero != null ? c.cajero.username : 'N/A'}">admin</span>
+                        </td>
+                        <td style="font-size:.85rem;" th:text="${#temporals.format(c.fechaApertura, 'dd/MM HH:mm')}">-</td>
+                        <td style="font-size:.85rem; color:var(--text-muted);"
+                            th:text="${c.fechaCierre != null ? #temporals.format(c.fechaCierre, 'dd/MM HH:mm') : '—'}">—</td>
+                        <td th:text="'$' + ${c.montoInicial}">$0</td>
+                        <td style="color:#34d399; font-weight:700;"
+                            th:text="${c.estado == 'ABIERTO' ? '$' + totalVentasActivo : (c.totalVentas != null ? '$' + c.totalVentas : '—')}">—</td>
+                        <td>
+                            <span th:if="${c.diferencia != null}"
+                                  th:classappend="${c.diferencia >= 0 ? 'diff-positivo' : 'diff-negativo'}"
+                                  th:text="'$' + ${c.diferencia}">$0</span>
+                            <span th:unless="${c.diferencia != null}" style="color:var(--text-muted);">—</span>
+                        </td>
+                        <td>
+                            <span th:if="${c.estado == 'ABIERTO'}" class="badge-abierto">🟢 ABIERTO</span>
+                            <span th:unless="${c.estado == 'ABIERTO'}" class="badge-cerrado">✓ CERRADO</span>
+                        </td>
+                        <td class="text-center">
+                            <button th:if="${c.estado == 'ABIERTO'}"
+                                    type="button"
+                                    th:onclick="|abrirModalCierre('/caja/cerrar/${c.id}')|"
+                                    style="background:none; border:none; color:#2AB6A1; font-size:.8rem; font-weight:700; cursor:pointer;">
+                                <i class="bi bi-lock-fill"></i> Corte
+                            </button>
+                            <span th:unless="${c.estado == 'ABIERTO'}" style="color:var(--text-muted); font-size:.8rem;">—</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${historial.isEmpty()}">
+                        <td colspan="9" class="text-center" style="color:var(--text-muted); padding:2rem;">
+                            Aún no se han registrado turnos.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- Modal: Apertura de Turno -->
+<div class="modal fade" id="modalApertura" tabindex="-1" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+        <div class="modal-content" style="background: rgba(26,29,46,0.92); border: 1px solid rgba(255,255,255,0.09); border-radius: 28px; box-shadow: 0 32px 64px rgba(0,0,0,0.55);">
+            <div class="modal-header border-0 px-4 pt-4 pb-0 d-flex align-items-center gap-3">
+                <div style="width:50px;height:50px;background:rgba(42,182,161,0.15);border:1px solid rgba(42,182,161,0.25);border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.6rem;">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+                <div>
+                    <h4 class="fw-bold mb-0" style="color:#fff;">Apertura de Turno</h4>
+                    <div style="font-size:.85rem; color:var(--text-muted);">Ingresa el fondo inicial de la caja</div>
+                </div>
+            </div>
+
+            <form th:action="@{/caja/abrir}" method="post">
+                <div class="modal-body px-4 py-4">
+                    <div class="mb-3">
+                        <label class="form-label-custom">Fondo Inicial de Caja <span style="color:var(--primary)">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,0.1); border-right:none; color:var(--primary); font-weight:700;">$</span>
+                            <input type="number" name="montoInicial" step="0.01" min="0" class="form-control"
+                                   placeholder="0.00" required autofocus
+                                   style="border-left:none;">
+                        </div>
+                        <div class="mt-2" style="font-size:.78rem; color:var(--text-muted);">
+                            Este monto es el dinero físico en caja al iniciar el turno.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 px-4 pb-4 pt-0 d-flex gap-2">
+                    <button type="button" class="btn-form-cancel flex-grow-1" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-form-submit flex-grow-1" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 20px rgba(16,185,129,.4);">
+                        <i class="bi bi-play-circle-fill"></i> Iniciar Turno
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Cierre de Turno (Corte de Caja) -->
+<div class="modal fade" id="modalCierre" tabindex="-1" style="backdrop-filter: blur(8px);">
+    <div class="modal-dialog modal-dialog-centered modal-xl" style="max-width: 900px;">
+        <div class="modal-content" style="background: rgba(15,17,23,0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; box-shadow: 0 40px 80px rgba(0,0,0,0.6);">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <button type="button" class="btn-close btn-close-white opacity-50 ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-2" id="modalCierreContent">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .summary-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .sumbox { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,0.08); border-radius:16px; padding:1.2rem; text-align:center; }
+    .sumbox .val { font-size: 1.4rem; font-weight: 800; }
+    .sumbox .lbl { font-size: .65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing:.06em; margin-top:.2rem; }
+    .expected-box { background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,0.2); border-radius:20px; padding:1.5rem; margin-bottom:1.5rem; }
+    .diff-live { font-size: 2rem; font-weight:800; padding:.5rem 0; }
+    .text-sobrante { color:#34d399; }
+    .text-faltante { color:#f87171; }
+    .card-glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; }
+    .btn-close-shift { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border:none; color:#fff; border-radius:14px; padding:1rem 2rem; font-weight:800; transition: all .2s; }
+    .btn-close-shift:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(42,182,161,0.3); }
+</style>
+
+<script>
+    let modalCierreInstancia = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalEl = document.getElementById('modalCierre');
+        if (modalEl) {
+            modalCierreInstancia = new bootstrap.Modal(modalEl);
+        }
+    });
+
+    function abrirModalCierre(url) {
+        const contentDiv = document.getElementById('modalCierreContent');
+        contentDiv.innerHTML = '<div class="text-center p-5"><div class="spinner-border" style="color: var(--primary);" role="status"></div><div class="mt-3" style="color:var(--text-muted)">Preparando arqueo de caja...</div></div>';
+        modalCierreInstancia.show();
+        cargarHTMLCierre(url);
+    }
+
+    function cargarHTMLCierre(url, fetchPromise = null) {
+        const contentDiv = document.getElementById('modalCierreContent');
+        const req = fetchPromise || fetch(url);
+        
+        req.then(response => {
+            if (response.url.endsWith('/caja')) {
+                location.reload(); // Éxito
+                return;
+            }
+            return response.text();
+        })
+        .then(html => {
+            if (!html) return;
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Extraemos los elementos que nos interesan
+            const title = doc.querySelector('h1').outerHTML;
+            const subtitle = doc.querySelector('p').outerHTML;
+            const summary = doc.querySelector('.summary-row').outerHTML;
+            const expected = doc.querySelector('.expected-box').outerHTML;
+            const form = doc.querySelector('.card-glass').outerHTML;
+            
+            contentDiv.innerHTML = `
+                <div class="text-center mb-4">
+                    ${title}
+                    ${subtitle}
+                </div>
+                ${summary}
+                ${expected}
+                ${form}
+            `;
+            
+            // Eliminar solo el botón cancelar original (el modal ya se cierra con la X o fuera)
+            const cancelBtn = contentDiv.querySelector('a[href="/caja"]');
+            if(cancelBtn) cancelBtn.remove();
+            
+            interceptarFormularioCierre(contentDiv, url);
+        });
+    }
+
+    function interceptarFormularioCierre(container, currentUrl) {
+        const form = container.querySelector('form');
+        const inputContado = container.querySelector('#montoContado');
+        
+        if (inputContado) {
+            inputContado.addEventListener('input', function() {
+                const esperado = parseFloat(this.dataset.esperado) || 0;
+                const contado = parseFloat(this.value) || 0;
+                const diff = contado - esperado;
+                const display = container.querySelector('#diff-display');
+                const label = container.querySelector('#diff-label');
+
+                if (this.value === '') { display.textContent = '—'; label.textContent = ''; return; }
+
+                display.textContent = '$' + Math.abs(diff).toFixed(2);
+                if (diff > 0) {
+                    display.className = 'diff-live text-sobrante';
+                    label.textContent = '✅ Sobrante';
+                    label.style.color = '#34d399';
+                } else if (diff < 0) {
+                    display.className = 'diff-live text-faltante';
+                    label.textContent = '⚠️ Faltante';
+                    label.style.color = '#f87171';
+                } else {
+                    display.className = 'diff-live text-sobrante';
+                    label.textContent = '✅ Perfecto — Sin diferencias';
+                    label.style.color = '#34d399';
+                }
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button[type="submit"]');
+                if(btn) btn.disabled = true;
+                
+                const formData = new FormData(this);
+                const req = fetch(this.action, { method: 'POST', body: formData });
+                cargarHTMLCierre(currentUrl, req);
+            });
+        }
+    }
+</script>
+
+</body>
+</html>

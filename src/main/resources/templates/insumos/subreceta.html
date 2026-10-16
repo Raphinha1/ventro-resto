@@ -1,0 +1,148 @@
+<main class="main-content" th:fragment="content">
+    <style>
+        .modal-body .main-content { margin-left: 0 !important; min-height: auto !important; padding: 0 !important; align-items: stretch !important; display: block !important; }
+        .modal-subreceta-container { padding: 1rem; color: #fff; width: 100%; }
+        .section-glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 1.5rem; height: 100%; }
+        .recipe-header { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1.5rem; margin-bottom: 1.5rem; }
+        .cost-badge { background: rgba(42,182,161,0.15); color: var(--primary); padding: 0.6rem 1.2rem; border-radius: 12px; font-weight: 700; border: 1px solid rgba(42,182,161,0.3); font-size: 0.9rem; }
+        
+        .form-label-sm { font-size: 0.7rem; text-transform: uppercase; color: rgba(255,255,255,0.5); font-weight: 700; margin-bottom: 0.4rem; display: block; }
+        .input-dark { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 10px; padding: 0.6rem 0.8rem; font-size: 0.9rem; }
+        .input-dark:focus { border-color: var(--primary); background: rgba(0,0,0,0.3); outline: none; box-shadow: 0 0 0 3px rgba(42,182,161,0.2); }
+        
+        .btn-add-ing { background: var(--primary); color: #fff; border: none; border-radius: 10px; padding: 0.6rem 1rem; font-weight: 700; width: 100%; transition: all 0.2s; }
+        .btn-add-ing:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(42,182,161,0.4); }
+        
+        .production-box { background: linear-gradient(135deg, rgba(217,70,239,0.15), rgba(217,70,239,0.05)); border: 1px solid rgba(217,70,239,0.3); border-radius: 18px; padding: 1.5rem; }
+        .btn-producir-final { background: #d946ef; color: white; border: none; border-radius: 10px; padding: 0.75rem; font-weight: 800; width: 100%; box-shadow: 0 4px 15px rgba(217,70,239,0.3); }
+        .btn-producir-final:hover { background: #c026d3; transform: translateY(-2px); }
+        
+        .table-sub { width: 100%; color: #fff; border-collapse: separate; border-spacing: 0 8px; }
+        .table-sub th { font-size: 0.65rem; text-transform: uppercase; color: rgba(255,255,255,0.4); padding: 0.5rem 1rem; }
+        .table-sub td { background: rgba(255,255,255,0.03); padding: 0.8rem 1rem; vertical-align: middle; }
+        .table-sub tr td:first-child { border-radius: 12px 0 0 12px; }
+        .table-sub tr td:last-child { border-radius: 0 12px 12px 0; }
+        
+        .empty-icon { font-size: 2.5rem; color: rgba(255,255,255,0.1); margin-bottom: 1rem; }
+    </style>
+
+    <div class="modal-subreceta-container">
+        <!-- Header -->
+        <div class="recipe-header d-flex justify-content-between align-items-center">
+            <div>
+                <h3 id="modalSubRecetaLabel" class="fw-800 mb-1" th:text="${insumoDestino.nombre}">Nombre Insumo</h3>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-dark border border-secondary" th:text="${insumoDestino.unidadMedida}">Kg</span>
+                    <span class="text-muted" style="font-size: 0.85rem;">Gestión de composición y transformación</span>
+                </div>
+            </div>
+            <div class="cost-badge">
+                <i class="bi bi-calculator me-2"></i> Costo x <span th:text="${insumoDestino.unidadMedida}">U</span>: $<span th:text="${costoProduccion}">0.00</span>
+            </div>
+        </div>
+
+        <!-- Alertas AJAX -->
+        <div th:if="${mensajeExito}" class="alert alert-success border-0 mb-4" style="background: rgba(16,185,129,0.1); color: #34d399; border-radius: 12px;" th:text="${mensajeExito}"></div>
+        <div th:if="${mensajeError}" class="alert alert-danger border-0 mb-4" style="background: rgba(239,68,68,0.1); color: #f87171; border-radius: 12px;" th:text="${mensajeError}"></div>
+
+        <div class="row g-4">
+            <!-- Columna Izquierda: Lista de Ingredientes -->
+            <div class="col-lg-7">
+                <div class="section-glass">
+                    <h6 class="fw-bold mb-4 d-flex align-items-center">
+                        <i class="bi bi-list-task me-2 text-primary"></i> Ingredientes de la Receta
+                    </h6>
+                    
+                    <div class="table-responsive">
+                        <table class="table-sub">
+                            <thead>
+                                <tr>
+                                    <th>Ingrediente</th>
+                                    <th>Cantidad</th>
+                                    <th>Costo Parcial</th>
+                                    <th class="text-end"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="rec: ${insumoDestino.ingredientesPreparacion}">
+                                    <td class="fw-600" th:text="${rec.ingrediente.nombre}">Harina</td>
+                                    <td th:text="${rec.cantidad} + ' ' + ${rec.ingrediente.unidadMedida}">0.5 Kg</td>
+                                    <td class="text-success fw-bold" th:text="'$' + (${#numbers.formatDecimal(rec.cantidad * rec.ingrediente.costoUnitario, 1, 2)})">$0.00</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-link text-danger p-0" title="Eliminar"
+                                                th:onclick="|ejecutarAccionSubReceta('/subrecetas/eliminar/' + ${rec.id}, {insumoDestinoId: ${insumoDestino.id}}, '¿Quitar ingrediente?', this)|">
+                                            <i class="bi bi-x-circle-fill"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(insumoDestino.ingredientesPreparacion)}">
+                                    <td colspan="4" class="text-center py-5">
+                                        <div class="empty-icon"><i class="bi bi-egg-fried"></i></div>
+                                        <p class="text-muted mb-0">No hay ingredientes definidos aún.</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Acciones -->
+            <div class="col-lg-5">
+                <div class="d-flex flex-column gap-4">
+                    <!-- Formulario de Añadir -->
+                    <div class="section-glass">
+                        <h6 class="fw-bold mb-3 d-flex align-items-center">
+                            <i class="bi bi-plus-circle-fill me-2 text-primary"></i> Agregar Ingrediente
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="inputAddIngredienteId" class="form-label-sm">Insumo del Almacén</label>
+                                <select id="inputAddIngredienteId" class="input-dark w-100" required>
+                                    <option value="">Seleccione ingrediente...</option>
+                                    <option th:each="ins : ${insumosDisponibles}" th:value="${ins.id}" 
+                                            th:text="${ins.nombre} + ' (' + ${ins.unidadMedida} + ')'"></option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label for="inputAddCantidad" class="form-label-sm">Cantidad necesaria para 1 <span th:text="${insumoDestino.unidadMedida}">U</span></label>
+                                <div class="input-group">
+                                    <input type="number" id="inputAddCantidad" step="0.0001" class="input-dark flex-grow-1" placeholder="0.0000" required>
+                                </div>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <button type="button" class="btn-add-ing" th:onclick="|agregarIngredienteModal(${insumoDestino.id})|">
+                                    <i class="bi bi-plus-lg me-1"></i> Añadir Ingrediente
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel de Producción -->
+                    <div class="production-box">
+                        <h6 class="fw-bold mb-2 d-flex align-items-center" style="color: #f5d0fe;">
+                            <i class="bi bi-fire me-2"></i> Orden de Producción
+                        </h6>
+                        <p class="text-white-50 small mb-4">Transforma stocks de materia prima en este insumo listo para la venta.</p>
+                        
+                        <div>
+                            <input type="hidden" id="inputProductionRequestId" th:value="${productionRequestId}">
+                            <div class="mb-3">
+                                <label for="inputProducir" class="form-label-sm" style="color: #f5d0fe;">¿Cuánto vas a fabricar hoy?</label>
+                                <div class="input-group">
+                                    <input type="number" id="inputProducir" step="0.01" class="input-dark flex-grow-1" style="background: rgba(0,0,0,0.4);" placeholder="0.00" required>
+                                    <span class="input-group-text border-0 text-white bg-transparent fw-bold" th:text="${insumoDestino.unidadMedida}">U</span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-producir-final" th:onclick="|producirLoteModal(${insumoDestino.id}, this)|">
+                                <i class="bi bi-lightning-charge-fill me-1"></i> REGISTRAR PRODUCCIÓN
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

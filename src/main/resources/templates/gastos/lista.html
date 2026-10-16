@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<style>
+        .page-header h1 { font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: 0.2rem; }
+        .table-custom { width: 100%; border-collapse: separate; border-spacing: 0 8px; color: var(--text-main); }
+        .table-custom th { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 1rem; border: none; font-weight: 600; }
+        .table-custom td { background: rgba(255,255,255,0.02); padding: 1rem; border: none; vertical-align: middle; }
+        .table-custom tr td:first-child { border-radius: 12px 0 0 12px; }
+        .table-custom tr td:last-child { border-radius: 0 12px 12px 0; }
+    </style>
+<main class="main-content">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>💸 Control de Gastos</h1>
+            <p class="text-muted mb-0">Gestión de egresos y costos operativos</p>
+        </div>
+        <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalNuevoGasto">
+            <i class="bi bi-plus-lg"></i> Registrar Gasto
+        </button>
+    </div>
+
+    <div th:if="${mensajeExito}" class="alert alert-success border-0 mb-4" th:text="${mensajeExito}" style="background: rgba(16,185,129,0.1); color: #34d399;"></div>
+    <div th:if="${mensajeError}" class="alert alert-danger border-0 mb-4" th:text="${mensajeError}" style="background: rgba(239,68,68,0.1); color: #f87171;"></div>
+
+    <div class="card-custom">
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Descripción</th>
+                        <th>Categoría</th>
+                        <th>Registrado por</th>
+                        <th class="text-end">Monto</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="g : ${gastos}">
+                        <td th:text="${#temporals.format(g.fecha, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
+                        <td class="fw-bold" th:text="${g.descripcion}">Renta</td>
+                        <td>
+                            <span class="badge bg-secondary" th:text="${g.categoria}" style="background: rgba(255,255,255,0.08) !important; border: 1px solid var(--border)">Servicios</span>
+                        </td>
+                        <td th:text="${g.usuario.username}">User</td>
+                        <td class="text-end fw-bold text-danger" th:text="'-$' + ${g.monto}">$0.00</td>
+                        <td class="text-center">
+                            <button type="button" class="p-0 border-0 bg-transparent text-danger"
+                                    th:data-id="${g.id}"
+                                    th:data-descripcion="${g.descripcion}"
+                                    onclick="abrirModalEliminar(this)">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${gastos.isEmpty()}">
+                        <td colspan="6" class="text-center py-5 text-muted">No hay gastos registrados aún.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- Modal de Eliminación mejorado -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1A1D2E;border:1px solid rgba(255,255,255,0.1);border-radius:20px">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div class="icon-box mb-3" style="font-size: 3.5rem; color: #f87171;">
+                    <i class="bi bi-exclamation-circle"></i>
+                </div>
+                <h4 class="fw-bold mb-2">¿Eliminar registro?</h4>
+                <p class="text-muted">Estás a punto de eliminar el gasto: <br> <strong id="descGasto" class="text-white"></strong></p>
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal" style="border-radius:10px">Cancelar</button>
+                    <form id="formEliminar" method="post" th:action="@{/gastos/eliminar/0}">
+                        <button type="submit" class="btn btn-danger px-4" style="border-radius:10px; background:#ef4444; border:none">
+                            Sí, Eliminar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalEliminar(btn) {
+        const id = btn.dataset.id;
+        const desc = btn.dataset.descripcion;
+        document.getElementById('descGasto').textContent = desc;
+        document.getElementById('formEliminar').action = '/gastos/eliminar/' + id;
+        const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+        modal.show();
+    }
+</script>
+
+<!-- Modal: Registrar Gasto -->
+<div class="modal fade" id="modalNuevoGasto" tabindex="-1" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+        <div class="modal-content" style="background: rgba(26,29,46,0.92); border: 1px solid rgba(255,255,255,0.09); border-radius: 28px; box-shadow: 0 32px 64px rgba(0,0,0,0.55);">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:42px;height:42px;background:rgba(42,182,161,0.15);border:1px solid rgba(42,182,161,0.25);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.2rem;">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0">Registrar Egreso</h5>
+                        <div style="font-size:.78rem; color:var(--text-muted);">Se restará de la utilidad neta</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white opacity-50 ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form th:action="@{/gastos/guardar}" method="post">
+                <div class="modal-body px-4 py-4">
+                    <div class="mb-3">
+                        <label class="form-label-custom">Descripción del Gasto <span style="color:var(--primary)">*</span></label>
+                        <input type="text" name="descripcion" class="form-control" placeholder="Ej: Pago de Luz Marzo, Renta..." required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Categoría</label>
+                            <select name="categoria" class="form-select">
+                                <option value="Servicios">Servicios (Luz, Agua, Gas)</option>
+                                <option value="Sueldos">Sueldos y Comisiones</option>
+                                <option value="Mantenimiento">Mantenimiento</option>
+                                <option value="Renta">Renta / Alquiler</option>
+                                <option value="Mercaderia">Compra de Mercadería</option>
+                                <option value="Impuestos">Impuestos</option>
+                                <option value="Otros">Otros Egresos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Monto ($)</label>
+                            <input type="number" step="0.01" name="monto" class="form-control" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label-custom">Fecha y Hora</label>
+                        <input type="datetime-local" name="fecha" class="form-control" style="color-scheme: dark;">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0 d-flex gap-2">
+                    <button type="button" class="btn-form-cancel" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i> Cancelar</button>
+                    <button type="submit" class="btn-form-submit flex-grow-1"><i class="bi bi-floppy-fill"></i> Guardar Gasto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

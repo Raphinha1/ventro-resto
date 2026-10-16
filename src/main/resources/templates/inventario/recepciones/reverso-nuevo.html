@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<main class="main-content receipt-page" id="reversal-app" th:data-receipt="${detail.header.id}" th:data-actor="${actorContext}"
+      th:data-request="${requestId}" th:data-reversal="${detail.header.reversal_id}" th:data-restaurant="${@environment.getProperty('ventro.restaurant-id')}">
+<link rel="stylesheet" th:href="@{/css/receipts.css}">
+<header class="page-header"><h1 th:text="${'Reverso completo · Recepción #' + detail.header.id}"></h1>
+<a th:href="@{/inventario/recepciones/{id}(id=${detail.header.id})}">Volver a la recepción</a></header>
+<p id="reversal-warning" class="alert alert-warning">Compensará todas las líneas de esta recepción. Es un reverso completo, no una devolución física a proveedor. Si el saldo no alcanza, se rechazará toda la operación.</p>
+<p th:if="${!detail.causal}" class="alert alert-warning">No hay integridad causal verificada. El servicio rechazará el reverso; esta consulta no repara los datos.</p>
+<p th:if="${detail.header.reversal_id != null}" class="alert alert-info">La recepción ya está REVERTIDA. Solo puedes recuperar un intento guardado con resultado desconocido; no se ofrece otro reverso.</p>
+<section aria-label="Compensaciones previstas, solo lectura">
+<article th:each="l : ${detail.lines}" class="card-custom receipt-line">
+<h2 th:text="${'Línea ' + l.line_no + ' · ' + l.insumo_nombre}"></h2>
+<p th:text="${l.presentation_nombre + ' · Salida compensatoria: ' + l.cantidad_base_efectiva + ' ' + l.unidad_base_codigo}"></p>
+<p class="receipt-reference" th:text="${'Operación original: ' + l.operation_id}"></p>
+</article></section>
+<div id="reversal-message" role="status" aria-live="polite" tabindex="-1"></div>
+<form id="reversal-form" aria-describedby="reversal-warning">
+<fieldset id="reversal-fields" class="card-custom">
+<legend>Confirmación del reverso completo</legend>
+<label for="reversal-reason">Motivo obligatorio</label>
+<textarea id="reversal-reason" class="form-control" required maxlength="1000" rows="4" aria-describedby="reversal-warning reversal-message"></textarea>
+</fieldset>
+<div class="receipt-toolbar receipt-actions">
+<button type="submit" th:disabled="${detail.header.reversal_id != null}" id="confirm-reversal" class="btn-primary-custom">Confirmar reverso completo</button>
+<button type="button" id="retry-reversal" class="btn btn-outline-light" hidden>Reintentar exactamente el mismo envío</button>
+<a id="reversal-detail" hidden>Ver reverso auditado</a>
+<a th:href="@{/inventario/recepciones/{id}(id=${detail.header.id})}">Consultar estado de la recepción</a>
+</div>
+<p>Intento: <output id="reversal-request"></output></p>
+</form>
+<noscript><p class="alert alert-warning">Habilita JavaScript para conservar este intento y enviar el reverso.</p></noscript>
+<script th:src="@{/js/receipt-reversal-client.js}"></script>
+</main></body></html>

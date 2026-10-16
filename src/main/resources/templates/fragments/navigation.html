@@ -1,0 +1,172 @@
+<nav xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" 
+     th:fragment="sidebar" class="sidebar">
+    <!-- Branding -->
+    <div class="sidebar-brand d-flex flex-column justify-content-center align-items-center" style="padding: 1.5rem 1.5rem 1rem;">
+        <span class="snapshot-wordmark" aria-label="Ventro" style="display:block; margin-bottom:0.5rem; color:var(--text-main); font-size:1.25rem; font-weight:800; letter-spacing:0.12em;">VENTRO</span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge" 
+                  th:classappend="${planActivo == 'LITE' ? 'bg-secondary' : (planActivo == 'PRO' ? 'bg-info' : 'bg-primary')}"
+                  style="font-size: 0.6rem; letter-spacing: 0.05em; padding: 0.35rem 0.6rem; border-radius: 6px; text-transform: uppercase; font-weight: 800;"
+                  th:text="${planActivo}">PLAN</span>
+            <span style="font-size: 0.65rem; color: var(--text-muted); font-weight: 500;">Ventro Resto</span>
+        </div>
+    </div>
+    
+    <!-- Principal -->
+    <div>
+        <div class="nav-section-label">Principal</div>
+        <a th:href="@{/dashboard}" class="nav-link-custom" sec:authorize="hasAnyRole('ADMIN','GERENTE')">
+            <i class="bi bi-grid-1x2-fill"></i> <span>Dashboard</span>
+        </a>
+        <a th:href="@{/pos}" class="nav-link-custom" sec:authorize="hasAnyRole('ADMIN','GERENTE','EMPLEADO','MESERO')">
+            <i class="bi bi-cart-fill"></i> <span>Punto de Venta</span>
+        </a>
+        <a th:href="@{/mesas}" class="nav-link-custom"
+           th:if="${planActivo == 'PRO' or planActivo == 'PREMIUM' or (planActivo == 'CUSTOM' and configSistema.modMesas)}"
+           sec:authorize="hasAnyRole('ADMIN','GERENTE','EMPLEADO','MESERO')">
+            <i class="bi bi-grid-3x3-gap-fill"></i> <span>Mapa de Mesas</span>
+        </a>
+        <a th:href="@{/reservas}" class="nav-link-custom"
+           th:if="${planActivo == 'PRO' or planActivo == 'PREMIUM' or (planActivo == 'CUSTOM' and configSistema.modReservas)}"
+           sec:authorize="hasAnyRole('ADMIN','GERENTE','EMPLEADO','MESERO')">
+            <i class="bi bi-calendar-check-fill"></i> <span>Reservas</span>
+        </a>
+        <a th:href="@{/kds}" class="nav-link-custom" 
+           th:if="${planActivo == 'PRO' or planActivo == 'PREMIUM' or (planActivo == 'CUSTOM' and configSistema.modKds)}"
+           sec:authorize="hasAnyRole('ADMIN','COCINERO')">
+            <i class="bi bi-display"></i> <span>KDS Cocina</span>
+        </a>
+    </div>
+
+    <!-- Operaciones (Visible for Admin/Gerente) -->
+    <div sec:authorize="hasAnyRole('ADMIN','GERENTE')">
+        <div class="nav-section-label">Operaciones</div>
+        <a th:href="@{/insumos}" class="nav-link-custom">
+            <i class="bi bi-box-seam"></i> <span>Inventario</span>
+        </a>
+        <a th:href="@{/inventario/recepciones}" class="nav-link-custom"
+           th:if="${@inventoryPermissionService.allowed(@usuarioRepository.findByUsername(#authentication.name).orElse(null)?.id, T(com.tuapp.restaurante.inventory.InventoryPermissionService.Permission).INVENTARIO_RECIBIR)}">
+            <i class="bi bi-box-arrow-in-down"></i> <span>Recepciones</span>
+        </a>
+        <a th:href="@{/productos}" class="nav-link-custom">
+            <i class="bi bi-journal-code"></i> <span>Menú y Recetas</span>
+        </a>
+
+        <div class="nav-section-label">Catálogos</div>
+        <a th:href="@{/categorias/insumos}" class="nav-link-custom">
+            <i class="bi bi-tags-fill"></i> <span>Categorías Insumos</span>
+        </a>
+        <a th:href="@{/categorias/menu}" class="nav-link-custom">
+            <i class="bi bi-tags-fill"></i> <span>Categorías Menú</span>
+        </a>
+        <a th:href="@{/proveedores}" class="nav-link-custom">
+            <i class="bi bi-truck"></i> <span>Proveedores</span>
+        </a>
+        
+        <div th:if="${planActivo == 'PREMIUM' or (planActivo == 'CUSTOM' and (configSistema.modCaja or configSistema.modHistorial or configSistema.modReportes or configSistema.modGastos))}">
+            <div class="nav-section-label">Finanzas</div>
+            <a th:href="@{/caja}" class="nav-link-custom"
+               th:if="${planActivo == 'PREMIUM' or (planActivo == 'CUSTOM' and configSistema.modCaja)}">
+                <i class="bi bi-cash-coin"></i> <span>Corte de Caja</span>
+            </a>
+            <a th:href="@{/pos/historial}" class="nav-link-custom" 
+               th:if="${planActivo == 'PREMIUM' or (planActivo == 'CUSTOM' and configSistema.modHistorial)}">
+                <i class="bi bi-clock-history"></i> <span>Historial de Ventas</span>
+            </a>
+            <a th:href="@{/reportes}" class="nav-link-custom" 
+               th:if="${planActivo == 'PREMIUM' or (planActivo == 'CUSTOM' and configSistema.modReportes)}">
+                <i class="bi bi-bar-chart-line-fill"></i> <span>Reportes Diarios</span>
+            </a>
+            <a th:href="@{/gastos}" class="nav-link-custom" 
+               th:if="${planActivo == 'PREMIUM' or (planActivo == 'CUSTOM' and configSistema.modGastos)}">
+                <i class="bi bi-cash-stack"></i> <span>Control de Gastos</span>
+            </a>
+        </div>
+
+        <div th:if="${planActivo == 'PRO' or planActivo == 'PREMIUM' or (planActivo == 'CUSTOM' and configSistema.modClientes)}">
+            <div class="nav-section-label">CRM</div>
+            <a th:href="@{/clientes}" class="nav-link-custom">
+                <i class="bi bi-people-fill"></i> <span>Clientes Frecuentes</span>
+            </a>
+        </div>
+
+        <div th:if="${planActivo == 'PREMIUM' or (planActivo == 'CUSTOM' and configSistema.modAsistencia)}">
+            <div class="nav-section-label">Recursos Humanos</div>
+            <a th:href="@{/asistencia/reporte}" class="nav-link-custom">
+                <i class="bi bi-clock-history"></i> <span>Control de Asistencia</span>
+            </a>
+        </div>
+
+        <div th:if="${planActivo == 'PREMIUM' or (planActivo == 'CUSTOM' and configSistema.modIa)}">
+            <div class="nav-section-label" style="color: #818cf8;">Inteligencia</div>
+            <a th:href="@{/ia/compras}" class="nav-link-custom"
+               th:classappend="${#httpServletRequest != null and #httpServletRequest.requestURI.startsWith('/ia') ? 'activo' : ''}"
+               style="border-left-color: rgba(99,102,241,0.3);"
+               onmouseover="this.style.borderLeftColor='#818cf8'; this.style.background='rgba(99,102,241,0.1)'; this.style.color='#818cf8';"
+               onmouseout="this.style.borderLeftColor=''; this.style.background=''; this.style.color='';">
+                <i class="bi bi-stars" style="color:#818cf8;"></i>
+                <span>IA Predictiva</span>
+                <span style="margin-left:auto; font-size:0.6rem; background:rgba(99,102,241,0.25); color:#818cf8; border-radius:6px; padding:0.1rem 0.4rem; font-weight:700;">NUEVO</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Super Admin (Super Admin only) -->
+    <div sec:authorize="hasRole('SUPER_ADMIN')">
+        <div class="nav-section-label" style="color: var(--primary);">Soporte Maestro</div>
+        <a th:href="@{/configuracion}" class="nav-link-custom">
+            <i class="bi bi-shield-lock-fill" style="color: var(--primary);"></i> <span>Gestión de Planes</span>
+        </a>
+        <a th:href="@{/usuarios}" class="nav-link-custom">
+            <i class="bi bi-people-fill"></i> <span>Usuarios Globales</span>
+        </a>
+    </div>
+
+    <!-- Administración (Admin only) -->
+    <div sec:authorize="hasRole('ADMIN')">
+        <div class="nav-section-label">Administración</div>
+        <a th:href="@{/usuarios}" class="nav-link-custom">
+            <i class="bi bi-people-fill"></i> <span>Usuarios</span>
+        </a>
+        <a th:href="@{/configuracion}" class="nav-link-custom">
+            <i class="bi bi-gear-fill"></i> <span>Configuración</span>
+        </a>
+    </div>
+    
+    <!-- User Profile & Logout -->
+    <div class="sidebar-user">
+        <div class="user-avatar">👤</div>
+        <div class="flex-grow-1">
+            <div class="user-name" sec:authentication="name">Usuario</div>
+            <div class="user-role" style="font-size:0.72rem;color:var(--text-muted)">Sesión activa</div>
+        </div>
+        <form th:action="@{/logout}" method="post" class="m-0 ms-auto">
+            <button type="submit" class="border-0 p-0" 
+                    style="background:transparent; color:rgba(255,255,255,0.7); transition: all 0.2s; cursor:pointer;" 
+                    onmouseover="this.style.color='#f87171'" 
+                    onmouseout="this.style.color='rgba(255,255,255,0.7)'">
+                <i class="bi bi-box-arrow-right fs-4"></i>
+            </button>
+        </form>
+    </div>
+
+    <!-- Script para iluminar dinámicamente el módulo activo -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-link-custom');
+            
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (!href) return;
+                
+                // Si la ruta actual empieza con el href del enlace (excepto rutas raíz como /pos que no deben iluminar historial)
+                if (href === currentPath) {
+                    link.classList.add('activo');
+                } else if (href !== '/dashboard' && href !== '/pos' && currentPath.startsWith(href)) {
+                    link.classList.add('activo');
+                }
+            });
+        });
+    </script>
+</nav>

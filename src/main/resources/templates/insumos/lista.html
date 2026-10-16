@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<main class="main-content" th:with="canManagePresentations=${@inventoryPermissionService.allowed(@usuarioRepository.findByUsername(#authentication.name).orElse(null)?.id, T(com.tuapp.restaurante.inventory.InventoryPermissionService.Permission).INVENTARIO_GESTIONAR_PRESENTACIONES)}">
+    <div class="d-flex justify-content-between align-items-center page-header">
+        <div>
+            <h1>📦 Gestión de Inventario</h1>
+            <span style="color:var(--text-muted)">Almacén e Insumos</span>
+        </div>
+        <div class="d-flex gap-2">
+            <a th:href="@{/reportes/insumos/pdf}" class="btn btn-outline-info" style="border-radius:10px;font-weight:600;">
+                <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+            </a>
+            <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalInsumo" onclick="abrirModalNuevo()">
+                <i class="bi bi-plus-lg"></i> Agregar Insumo
+            </button>
+        </div>
+    </div>
+
+    <div th:if="${mensajeExito}" class="alert alert-success" th:text="${mensajeExito}"></div>
+    <div th:if="${mensajeError}" class="alert alert-danger" th:text="${mensajeError}"></div>
+
+    <div class="card-custom" id="tablaInsumosContainer" th:fragment="tablaInsumos">
+        <div class="table-responsive">
+        <table class="table table-custom">
+            <thead>
+            <tr>
+                <th>ID</th><th>Nombre</th><th>Categoría</th><th>Stock Actual</th><th>Costo Un.</th><th class="d-none d-md-table-cell">Proveedor</th><th class="text-center">Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="insumo : ${insumos}">
+                <td th:text="${insumo.id}">1</td>
+                <td th:text="${insumo.nombre}">Producto</td>
+                <td th:text="${insumo.categoria != null ? insumo.categoria.nombre : '—'}">Cat</td>
+                <td>
+                    <span th:class="${insumo.stockActual <= insumo.stockMinimo} ? 'stock-bajo' : ''"
+                          th:text="${insumo.stockActual} + ' ' + ${insumo.unidadMedida}">10 Kg</span>
+                    <i th:if="${insumo.stockActual <= insumo.stockMinimo}" class="bi bi-exclamation-triangle-fill" style="color:#ff7e7e"></i>
+                </td>
+                <td th:text="'$' + ${insumo.costoUnitario}">$10.0</td>
+                <td class="d-none d-md-table-cell" th:text="${insumo.proveedor != null ? insumo.proveedor.nombreEmpresa : '—'}">Prov</td>
+                <td class="text-center">
+                    <div class="d-flex gap-2 justify-content-center">
+                        <a th:href="@{/insumos/{id}/presentaciones(id=${insumo.id})}" class="btn-sm-icon" title="Presentaciones de compra"
+                           th:if="${canManagePresentations}"><i class="bi bi-box"></i></a>
+                        <button type="button" class="btn-sm-icon movimiento" title="Ajuste/Entrada/Salida"
+                                th:data-url="@{/movimientos/registrar/{id}(id=${insumo.id})}"
+                                onclick="abrirModalMovimiento(this.dataset.url)">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </button>
+                        <a th:href="@{/movimientos/insumo/{id}(id=${insumo.id})}" class="btn-sm-icon text-white border-secondary" title="Historial">
+                            <i class="bi bi-clock-history"></i>
+                        </a>
+                        <button type="button" class="btn-sm-icon subreceta" title="Sub-receta / Producción"
+                                th:data-id="${insumo.id}" onclick="abrirModalSubReceta(this.dataset.id)">
+                            <i class="bi bi-diagram-3-fill"></i>
+                        </button>
+                        <button type="button" class="btn-sm-icon merma" title="Reportar Merma"
+                                th:data-id="${insumo.id}" onclick="abrirModalMerma(this.dataset.id)">
+                            <i class="bi bi-exclamation-octagon-fill"></i>
+                        </button>
+                        <button type="button" class="btn-sm-icon editar" title="Editar"
+                                th:data-id="${insumo.id}"
+                                th:data-nombre="${insumo.nombre}"
+                                th:data-unidad="${insumo.unidadMedida}"
+                                th:data-costo="${insumo.costoUnitario}"
+                                th:data-stockmin="${insumo.stockMinimo}"
+                                th:data-stockactual="${insumo.stockActual}"
+                                th:data-categoria="${insumo.categoria != null ? insumo.categoria.id : ''}"
+                                th:data-proveedor="${insumo.proveedor != null ? insumo.proveedor.id : ''}"
+                                onclick="abrirModalEditar(this)">
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
+                        <button type="button" class="btn-sm-icon eliminar"
+                                th:data-id="${insumo.id}" th:data-nombre="${insumo.nombre}"
+                                onclick="abrirModalEliminar(this)" title="Eliminar">
+                            <i class="bi bi-trash-fill"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(insumos)}">
+                <td colspan="7" class="text-center text-muted py-4">No hay insumos en el almacén</td>
+            </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+</main>
+
+<style>
+    .stock-bajo { color: #ff7e7e; font-weight: bold; }
+    .btn-sm-icon{width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);text-decoration:none;font-size:0.9rem;transition:all 0.15s;cursor:pointer;background:transparent}
+    .btn-sm-icon.editar{background:rgba(78,149,255,0.1);color:#4e95ff;border-color:rgba(78,149,255,0.2)}
+    .btn-sm-icon.editar:hover{background:rgba(78,149,255,0.2);border-color:#4e95ff}
+    .btn-sm-icon.eliminar{background:rgba(255,126,126,0.1);color:#ff7e7e;border-color:rgba(255,126,126,0.2)}
+    .btn-sm-icon.eliminar:hover{background:rgba(255,126,126,0.2);border-color:#ff7e7e}
+    .btn-sm-icon.movimiento{background:rgba(110,231,180,0.1);color:#6ee7b4;border-color:rgba(110,231,180,0.2)}
+    .btn-sm-icon.movimiento:hover{background:rgba(110,231,180,0.2);border-color:#6ee7b4}
+    .btn-sm-icon.subreceta{background:rgba(217,70,239,0.1);color:#d946ef;border-color:rgba(217,70,239,0.2)}
+    .btn-sm-icon.subreceta:hover{background:rgba(217,70,239,0.2);border-color:#d946ef}
+    .btn-sm-icon.merma{background:rgba(239,68,68,0.1);color:#ef4444;border-color:rgba(239,68,68,0.2)}
+    .btn-sm-icon.merma:hover{background:rgba(239,68,68,0.2);border-color:#ef4444}
+    .insumo-info-box { background: rgba(42,182,161,0.1) !important; border: 1px solid rgba(42,182,161,0.2) !important; color: #fff !important; border-radius: 12px; padding: 0.8rem 1.2rem; font-size: 0.95rem; display: flex; align-items: center; font-weight: 500; margin-bottom: 1.5rem; }
+    .insumo-info-box i { color: var(--primary) !important; font-size: 1.2rem; margin-right: 0.8rem; }
+</style>
+
+<!-- =========== MODAL CREAR / EDITAR INSUMO =========== -->
+<div class="modal fade" id="modalInsumo" tabindex="-1" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width:640px;">
+        <div class="modal-content" style="background:rgba(26,29,46,0.92);border:1px solid rgba(255,255,255,0.09);border-radius:28px;box-shadow:0 32px 64px rgba(0,0,0,0.55);">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:42px;height:42px;background:rgba(42,182,161,0.15);border:1px solid rgba(42,182,161,0.25);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.2rem;">
+                        <i class="bi bi-box-seam-fill"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="modalInsumoTitulo">Nuevo Insumo</h5>
+                        <div style="font-size:.78rem;color:var(--text-muted);" id="modalInsumoSub">Registro técnico de inventario</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white opacity-50 ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form id="formInsumo" th:action="@{/insumos/guardar}" method="post">
+                <input type="hidden" id="insumoId" name="id">
+                <div class="modal-body px-4 py-4">
+                    <div class="mb-3">
+                        <label class="form-label-custom">Nombre del Insumo <span style="color:var(--primary)">*</span></label>
+                        <input type="text" id="insumoNombre" name="nombre" class="form-control" placeholder="Ej. Tomate Roma" required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Unidad de Medida <span style="color:var(--primary)">*</span></label>
+                            <input type="text" id="insumoUnidad" name="unidadMedida" class="form-control" placeholder="Kg, L, Pz" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Costo Unitario ($) <span style="color:var(--primary)">*</span></label>
+                            <input type="number" step="0.01" id="insumoCosto" name="costoUnitario" class="form-control" placeholder="0.00" required>
+                        </div>
+                    </div>
+                    <div id="stockNuevoFields" class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Stock Inicial <span style="color:var(--primary)">*</span></label>
+                            <input type="number" step="0.01" id="insumoStockActual" name="stockActual" class="form-control" placeholder="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Stock Mínimo <span style="color:var(--primary)">*</span></label>
+                            <input type="number" step="0.01" id="insumoStockMin" name="stockMinimo" class="form-control" placeholder="0" required>
+                        </div>
+                    </div>
+                    <div id="stockEditFields" class="mb-3 d-none">
+                        <div class="form-info-chip">
+                            <i class="bi bi-info-circle-fill"></i>
+                            Para modificar el stock actual usa <strong>Movimientos / Ajustes</strong>.
+                        </div>
+                        <label class="form-label-custom">Stock Mínimo de Alerta</label>
+                        <input type="number" step="0.01" id="insumoStockMinEdit" name="stockMinimo2" class="form-control" placeholder="0">
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Categoría <span style="color:var(--primary)">*</span></label>
+                            <select id="insumoCategoria" name="categoria" class="form-select" required>
+                                <option value="">Seleccione...</option>
+                                <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Proveedor <span style="color:var(--primary)">*</span></label>
+                            <select id="insumoProveedor" name="proveedor" class="form-select" required>
+                                <option value="">Seleccione...</option>
+                                <option th:each="prov : ${proveedores}" th:value="${prov.id}" th:text="${prov.nombreEmpresa}"></option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0 d-flex gap-2">
+                    <button type="button" class="btn-form-cancel" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i> Cancelar</button>
+                    <button type="submit" class="btn-form-submit flex-grow-1" id="btnSubmitInsumo">
+                        <i class="bi bi-floppy-fill"></i> <span id="btnInsumoLabel">Crear Insumo</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Eliminar -->
+<form id="formEliminar" method="post" th:action="@{/insumos/eliminar/0}"></form>
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1A1D2E;border:1px solid rgba(255,255,255,0.1);border-radius:16px">
+            <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.08)">
+                <h5 class="modal-title" style="color:#fff"><i class="bi bi-exclamation-triangle-fill me-2" style="color:#ff7e7e"></i>Confirmar eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="color:rgba(255,255,255,0.7)">
+                ¿Eliminar el insumo <strong id="nombreInsumo" style="color:#fff"></strong>?
+                <p class="mt-2 mb-0" style="font-size:.82rem;color:rgba(255,255,255,.4)">Fallará si está vinculado a movimientos o recetas.</p>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid rgba(255,255,255,0.08)">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn" id="btnConfirmarEliminar"
+                        style="background:linear-gradient(135deg,#1E8E7C,#c23d16);color:#fff;border:none;border-radius:8px;padding:.5rem 1.2rem;font-weight:600">
+                    <i class="bi bi-trash3-fill me-1"></i>Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Genérico Confirmación Subrecetas -->
+<div class="modal fade" id="modalConfirmarAccion" tabindex="-1" aria-labelledby="modalConfirmarTitulo" aria-describedby="modalConfirmarMensaje" style="backdrop-filter: blur(5px); z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content" style="background:#1A1D2E;border:1px solid rgba(255,255,255,0.1);border-radius:16px;box-shadow:0 15px 35px rgba(0,0,0,0.5);">
+            <div class="modal-body text-center p-4">
+                <i class="bi bi-question-circle-fill d-block mb-3" style="font-size: 3rem; color: var(--primary);"></i>
+                <h5 class="text-white mb-3" id="modalConfirmarTitulo">¿Estás seguro?</h5>
+                <p style="color:rgba(255,255,255,0.7); font-size: 0.9rem;" id="modalConfirmarMensaje">Esta acción no se puede deshacer.</p>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <button type="button" class="btn btn-secondary px-4 rounded-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary px-4 rounded-3" id="btnConfirmarAccion">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalNuevo() {
+        document.getElementById('modalInsumoTitulo').textContent = 'Nuevo Insumo';
+        document.getElementById('modalInsumoSub').textContent = 'Registro técnico de inventario';
+        document.getElementById('btnInsumoLabel').textContent = 'Crear Insumo';
+        document.getElementById('insumoId').value = '';
+        document.getElementById('insumoNombre').value = '';
+        document.getElementById('insumoUnidad').value = '';
+        document.getElementById('insumoCosto').value = '';
+        document.getElementById('insumoStockActual').value = '';
+        document.getElementById('insumoStockMin').value = '';
+        document.getElementById('insumoCategoria').value = '';
+        document.getElementById('insumoProveedor').value = '';
+        document.getElementById('stockNuevoFields').classList.remove('d-none');
+        document.getElementById('stockEditFields').classList.add('d-none');
+        document.getElementById('insumoStockActual').required = true;
+    }
+
+    function abrirModalEditar(btn) {
+        document.getElementById('modalInsumoTitulo').textContent = 'Editar Insumo';
+        document.getElementById('modalInsumoSub').textContent = 'Modifica los datos del insumo';
+        document.getElementById('btnInsumoLabel').textContent = 'Guardar Cambios';
+        document.getElementById('insumoId').value = btn.dataset.id;
+        document.getElementById('insumoNombre').value = btn.dataset.nombre;
+        document.getElementById('insumoUnidad').value = btn.dataset.unidad;
+        document.getElementById('insumoCosto').value = btn.dataset.costo;
+        document.getElementById('insumoStockMinEdit').value = btn.dataset.stockmin;
+        // En edición, el stockMinimo real lo toma de insumoStockMinEdit via name override
+        document.getElementById('insumoStockMin').value = btn.dataset.stockmin;
+        document.getElementById('insumoCategoria').value = btn.dataset.categoria;
+        document.getElementById('insumoProveedor').value = btn.dataset.proveedor;
+        document.getElementById('stockNuevoFields').classList.add('d-none');
+        document.getElementById('stockEditFields').classList.remove('d-none');
+        document.getElementById('insumoStockActual').required = false;
+        document.getElementById('insumoStockActual').value = btn.dataset.stockactual;
+        new bootstrap.Modal(document.getElementById('modalInsumo')).show();
+    }
+
+    function abrirModalEliminar(btn) {
+        document.getElementById('nombreInsumo').textContent = btn.dataset.nombre;
+        document.getElementById('formEliminar').action = '/insumos/eliminar/' + btn.dataset.id;
+        const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+        document.getElementById('btnConfirmarEliminar').onclick = () => document.getElementById('formEliminar').submit();
+        modal.show();
+    }
+</script>
+
+<!-- Modal Movimiento (Dinámico AJAX) -->
+<div class="modal fade" id="modalMovimiento" tabindex="-1" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 650px;">
+        <div class="modal-content" style="background: rgba(26,29,46,0.95); border: 1px solid rgba(255,255,255,0.09); border-radius: 28px; box-shadow: 0 32px 64px rgba(0,0,0,0.55);">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <button type="button" class="btn-close btn-close-white opacity-50 ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-2" id="modalMovimientoContent">
+                <!-- Contenido inyectado por JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sub-receta (Dinámico AJAX) -->
+        <div class="modal fade" id="modalSubReceta" tabindex="-1" aria-labelledby="modalSubRecetaLabel" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content" style="background: rgba(26,29,46,0.98); border: 1px solid rgba(255,255,255,0.09); border-radius: 28px; box-shadow: 0 32px 64px rgba(0,0,0,0.55);">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <button type="button" class="btn-close btn-close-white opacity-50 ms-auto" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body px-4 py-2" id="modalSubRecetaContent" style="min-height: 400px;">
+                <!-- Contenido cargado por AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Merma (Dinámico AJAX) -->
+<div class="modal fade" id="modalMerma" tabindex="-1" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 700px;">
+        <div class="modal-content" style="background: rgba(26,29,46,0.95); border: 1px solid rgba(255,255,255,0.09); border-radius: 28px; box-shadow: 0 32px 64px rgba(0,0,0,0.55);">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <h5 class="modal-title fw-bold text-white"><i class="bi bi-exclamation-octagon-fill text-danger me-2"></i> Reporte de Mermas y Desperdicios</h5>
+                <button type="button" class="btn-close btn-close-white opacity-50 ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-4" id="modalMermaContent">
+                <!-- Contenido cargado por AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let modalMovimientoInstancia = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalEl = document.getElementById('modalMovimiento');
+        if (modalEl) {
+            modalMovimientoInstancia = new bootstrap.Modal(modalEl);
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                // Solo recargar si hubo un cambio exitoso (opcional, por ahora recargamos siempre)
+                if (window.huboCambioMovimiento) {
+                    location.reload();
+                }
+            });
+        }
+    });
+
+    function abrirModalMovimiento(url) {
+        window.huboCambioMovimiento = false;
+        const contentDiv = document.getElementById('modalMovimientoContent');
+        contentDiv.innerHTML = '<div class="text-center p-5"><div class="spinner-border" style="color: var(--primary);" role="status"></div><div class="mt-3" style="color:var(--text-muted)">Cargando formulario...</div></div>';
+        modalMovimientoInstancia.show();
+        cargarHTMLMovimiento(url);
+    }
+
+    function cargarHTMLMovimiento(url, fetchPromise = null) {
+        const contentDiv = document.getElementById('modalMovimientoContent');
+        const req = fetchPromise || fetch(url);
+        
+        req.then(response => {
+            // Si la respuesta viene de una redirección (post-guardado), detectar si es la lista de insumos
+            if (response.url.endsWith('/insumos')) {
+                window.huboCambioMovimiento = true;
+                modalMovimientoInstancia.hide();
+                return;
+            }
+            return response.text();
+        })
+        .then(html => {
+            if (!html) return;
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const formCard = doc.querySelector('.card-custom');
+            const header = doc.querySelector('.page-header');
+            
+            if(formCard) {
+                formCard.style.boxShadow = 'none';
+                formCard.style.border = 'none';
+                formCard.style.padding = '0 1rem 1rem 1rem';
+                formCard.style.background = 'transparent';
+                formCard.style.maxWidth = '100%';
+                
+                contentDiv.innerHTML = '';
+                
+                if (header) {
+                    header.style.marginBottom = '1.5rem';
+                    header.querySelector('h1').style.fontSize = '1.4rem';
+                    contentDiv.appendChild(header);
+                }
+                
+                contentDiv.appendChild(formCard);
+                
+                // Quitar botón cancelar original y ajustar el de procesar
+                const cancelBtn = formCard.querySelector('.btn-secondary-custom');
+                if(cancelBtn) cancelBtn.remove();
+                
+                interceptarFormularioMovimiento(contentDiv, url);
+            }
+        });
+    }
+
+    function interceptarFormularioMovimiento(container, currentUrl) {
+        const form = container.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btn = this.querySelector('button[type="submit"]');
+                if(btn) btn.disabled = true;
+                
+                const formData = new FormData(this);
+                const req = fetch(this.action, { method: 'POST', body: formData });
+                cargarHTMLMovimiento(currentUrl, req);
+            });
+        }
+    }
+
+    // --- LOGICA PARA SUB-RECETAS EN MODAL ---
+    let modalSubRecetaInstancia = null;
+    function abrirModalSubReceta(id) {
+        if(!modalSubRecetaInstancia) modalSubRecetaInstancia = new bootstrap.Modal(document.getElementById('modalSubReceta'));
+        const contentDiv = document.getElementById('modalSubRecetaContent');
+        contentDiv.innerHTML = '<div class="d-flex justify-content-center py-5"><div class="spinner-border text-primary" role="status"></div></div>';
+        const modal = new bootstrap.Modal(document.getElementById('modalSubReceta'));
+        modal.show();
+        cargarHTMLSubReceta(`/subrecetas/${id}`);
+    }
+
+    // ========== FLUJO DE MERMAS ==========
+    function abrirModalMerma(id) {
+        const contentDiv = document.getElementById('modalMermaContent');
+        contentDiv.innerHTML = '<div class="d-flex justify-content-center py-5"><div class="spinner-border text-danger" role="status"></div></div>';
+        const modal = new bootstrap.Modal(document.getElementById('modalMerma'));
+        modal.show();
+        
+        fetch(`/movimientos/merma/${id}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            contentDiv.innerHTML = html;
+        })
+        .catch(err => {
+            console.error("Error al cargar modal merma:", err);
+            contentDiv.innerHTML = '<div class="alert alert-danger">Error de conexión.</div>';
+        });
+    }
+
+    function registrarMermaAjax(form) {
+        abrirModalConfirmacion('¿Confirmar el descarte de este insumo como merma? Esta acción descontará el inventario.', () => {
+            const btn = form.querySelector('button[type="submit"]');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Registrando...';
+
+            const formData = new FormData(form);
+            const csrfToken = document.querySelector('meta[name="_csrf"]');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+            const headers = { 'X-Requested-With': 'XMLHttpRequest' };
+            if (csrfToken && csrfHeader) headers[csrfHeader.content] = csrfToken.content;
+
+            fetch('/movimientos/merma/guardar', {
+                method: 'POST',
+                body: formData,
+                headers: headers
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('modalMermaContent').innerHTML = html;
+                refrescarTablaInsumos();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error al registrar merma: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            });
+        });
+    }
+
+    function cargarHTMLSubReceta(url, fetchPromise = null) {
+        const contentDiv = document.getElementById('modalSubRecetaContent');
+        const req = fetchPromise || fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        
+        req.then(response => {
+            // Detectar éxito en producción (redirección a /insumos)
+            if (response.redirected && response.url.includes('/insumos')) {
+                location.reload();
+                return;
+            }
+            if (response.url.endsWith('/insumos')) {
+                location.reload();
+                return;
+            }
+            return response.text();
+        })
+        .then(html => {
+            if (!html) return;
+            contentDiv.innerHTML = html;
+        })
+        .catch(err => {
+            console.error("Error en modal sub-receta:", err);
+            contentDiv.innerHTML = '<div class="alert alert-danger">Error de conexión al procesar la solicitud.</div>';
+        });
+    }
+
+    // Funciones JS directas para evitar formularios nativos
+    function ejecutarAccionSubReceta(urlPath, payload, confirmMsg, btnElement) {
+        if (confirmMsg) {
+            abrirModalConfirmacion(confirmMsg, () => {
+                procesarPeticionSubReceta(urlPath, payload, btnElement);
+            }, document.getElementById('inputProducir') || btnElement);
+        } else {
+            procesarPeticionSubReceta(urlPath, payload, btnElement);
+        }
+    }
+    
+    // Variable para persistir la instancia del modal y evitar duplicidad de backdrops
+    let modalConfirmInstance = null;
+
+    function abrirModalConfirmacion(mensaje, callback, returnFocusElement = null) {
+        const modalElem = document.getElementById('modalConfirmarAccion');
+        document.getElementById('modalConfirmarMensaje').textContent = mensaje;
+        const btnConfirm = document.getElementById('btnConfirmarAccion');
+        
+        // Limpiar eventos anteriores clonando el nodo
+        const newBtnConfirm = btnConfirm.cloneNode(true);
+        btnConfirm.parentNode.replaceChild(newBtnConfirm, btnConfirm);
+        
+        if (!modalConfirmInstance) {
+            modalConfirmInstance = new bootstrap.Modal(modalElem);
+        }
+        
+        let confirmed = false;
+        modalElem.addEventListener('hidden.bs.modal', function() {
+            if (returnFocusElement?.isConnected && !returnFocusElement.disabled) {
+                returnFocusElement.focus();
+            }
+            if (confirmed) callback();
+        }, { once: true });
+
+        newBtnConfirm.addEventListener('click', function() {
+            confirmed = true;
+            document.activeElement?.blur();
+            modalConfirmInstance.hide();
+        });
+        
+        modalConfirmInstance.show();
+    }
+
+    function procesarPeticionSubReceta(urlPath, payload, btnElement) {
+        const btn = btnElement;
+        const originalHtml = btn ? btn.innerHTML : '';
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
+        }
+
+        const formData = new FormData();
+        for (const key in payload) {
+            formData.append(key, payload[key]);
+        }
+        
+        const csrfToken = document.querySelector('meta[name="_csrf"]');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+        const headers = { 'X-Requested-With': 'XMLHttpRequest' };
+        if (csrfToken && csrfHeader) {
+            headers[csrfHeader.content] = csrfToken.content;
+        }
+
+        const postReq = fetch(urlPath, {
+            method: 'POST',
+            body: formData,
+            headers: headers
+        })
+        .then(response => {
+            if (!response.ok || response.redirected) {
+                throw new Error('La respuesta del servidor no pudo confirmarse. Reintenta la misma operación.');
+            }
+            return response.text();
+        })
+        .then(html => {
+            if (html) {
+                document.getElementById('modalSubRecetaContent').innerHTML = html;
+                // El servidor conserva la clave en errores y solo entrega otra
+                // cuando confirmó una producción. Un fallo de red deja el DOM intacto.
+                refrescarTablaInsumos();
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error al procesar: ' + err.message);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        });
+    }
+
+    function refrescarTablaInsumos() {
+        fetch('/insumos', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const container = document.getElementById('tablaInsumosContainer');
+            if (container && html) {
+                container.innerHTML = html;
+            }
+        })
+        .catch(err => console.error("Error al refrescar tabla:", err));
+    }
+
+    function agregarIngredienteModal(insumoDestinoId) {
+        const ingId = document.getElementById('inputAddIngredienteId').value;
+        const cant = document.getElementById('inputAddCantidad').value;
+        if (!ingId || !cant) {
+            alert('Por favor selecciona un ingrediente y una cantidad.');
+            return;
+        }
+        ejecutarAccionSubReceta('/subrecetas/agregar', {
+            insumoDestinoId: insumoDestinoId,
+            ingredienteId: ingId,
+            cantidad: cant
+        }, null, null);
+    }
+
+    function producirLoteModal(insumoDestinoId, btnElement) {
+        const cant = document.getElementById('inputProducir').value;
+        if (!cant || cant <= 0) {
+            alert('Ingresa una cantidad válida mayor a 0.');
+            return;
+        }
+        ejecutarAccionSubReceta('/subrecetas/producir', {
+            insumoDestinoId: insumoDestinoId,
+            cantidadAProducir: cant,
+            requestId: document.getElementById('inputProductionRequestId').value
+        }, '¿Confirmar orden de producción? Se descontarán ingredientes.', btnElement);
+    }
+</script>
+
+</body>
+</html>

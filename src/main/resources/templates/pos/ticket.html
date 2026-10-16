@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket #<span th:text="${venta.id}">0</span> — Ventro Resto</title>
+    <style>
+        /* ── Reset y fuente térmica ── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            width: 80mm;
+            margin: 0 auto;
+            background: #fff;
+            color: #000;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        /* ── Zona de botones (no se imprime) ── */
+        .no-print {
+            width: 80mm;
+            margin: 0 auto 12px;
+            padding: 10px;
+            background: #f4f4f4;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            gap: 6px;
+        }
+        .btn-imp {
+            flex: 1;
+            padding: 8px 0;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-cliente  { background: #1a1d2e; color: #fff; }
+        .btn-cocina   { background: #f59e0b; color: #fff; }
+        .btn-volver   { background: #e5e7eb; color: #374151; }
+
+        /* ── Separadores ── */
+        .sep-solid  { border: none; border-top: 1px solid #000; margin: 6px 0; }
+        .sep-dashed { border: none; border-top: 1px dashed #555; margin: 5px 0; }
+
+        /* ── Cabecera ── */
+        .header { text-align: center; padding: 8px 0 6px; }
+        .header .logo-icon { font-size: 28px; line-height: 1; }
+        .header .biz-name  { font-size: 16px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; margin: 4px 0 2px; }
+        .header .biz-sub   { font-size: 10px; color: #444; }
+        .header .biz-addr  { font-size: 10px; color: #555; margin-top: 3px; }
+
+        /* ── Info del ticket ── */
+        .info-row { display: flex; justify-content: space-between; margin: 2px 0; font-size: 11px; }
+        .info-section { padding: 4px 0; }
+        .ticket-num { text-align: center; font-size: 18px; font-weight: 900; letter-spacing: 2px; margin: 4px 0; }
+
+        /* ── Tabla de artículos ── */
+        .items-table { width: 100%; border-collapse: collapse; margin: 4px 0; }
+        .items-table th { text-align: left; padding: 3px 2px; font-size: 10px; text-transform: uppercase; border-bottom: 1px solid #000; }
+        .items-table th.right,
+        .items-table td.right { text-align: right; }
+        .items-table th.center,
+        .items-table td.center { text-align: center; }
+        .items-table td { padding: 4px 2px; font-size: 11px; vertical-align: top; }
+        .items-table .item-name { font-weight: 600; }
+        .items-table .item-nota { font-size: 10px; color: #555; font-style: italic; padding-left: 6px; margin-top: 1px; }
+
+        /* ── Totales ── */
+        .total-section { padding: 4px 0; }
+        .total-row { display: flex; justify-content: space-between; margin: 2px 0; font-size: 11px; }
+        .total-row.grand { font-size: 15px; font-weight: 900; margin-top: 5px; }
+        .total-row.cambio { color: #1a6b3a; font-weight: 700; }
+
+        /* ── Footer ── */
+        .footer { text-align: center; padding: 8px 0 6px; }
+        .footer .thanks { font-size: 13px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; }
+        .footer .msg { font-size: 10px; color: #444; margin-top: 3px; }
+        .footer .powered { font-size: 9px; color: #aaa; margin-top: 8px; letter-spacing: 0.5px; }
+
+        /* ── Cut mark ── */
+        .cut-mark { text-align: center; font-size: 11px; letter-spacing: 4px; color: #999; margin: 6px 0; }
+
+        /* ── Media print ── */
+        @media print {
+            .no-print { display: none !important; }
+            body { width: 80mm; margin: 0; padding: 2mm; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ════════ Botones (no se imprimen) ════════ -->
+<div class="no-print">
+    <div style="display: flex; gap: 15px; justify-content: center; padding: 10px;">
+        <button onclick="window.print()" style="padding: 10px 24px; border: none; border-radius: 8px; background: #2AB6A1; color: #fff; font-weight: 700; cursor: pointer;">
+            🖨️ Imprimir Ticket
+        </button>
+        <button th:onclick="'window.open(\'/pos/cocina/' + ${venta.id} + '\', \'_blank\')'"
+                style="padding: 10px 24px; border: none; border-radius: 8px; background: #f59e0b; color: #fff; font-weight: 700; cursor: pointer;">
+            👨‍🍳 Ticket Cocina
+        </button>
+        <a href="/pos" style="padding: 10px 24px; border: none; border-radius: 8px; background: #2D3561; color: #fff; font-weight: 700; cursor: pointer; text-decoration: none;">
+            ↩️ Volver al POS
+        </a>
+    </div>
+</div>
+
+<!-- ════════ Ticket Cliente ════════ -->
+<div class="header">
+    <div class="logo-icon">🍽️</div>
+    <div class="biz-name" th:text="${config != null ? config.nombreNegocio : 'VENTRO RESTO'}">VENTRO RESTO</div>
+    <div class="biz-sub" th:text="${config != null ? config.slogan : 'Sistema de Gestión'}">Sistema de Gestión</div>
+    <div class="biz-addr" th:if="${config != null and config.direccion != null}" th:text="${config.direccion}"></div>
+    <div class="biz-addr" th:if="${config != null and config.telefono != null}" th:text="'Tel: ' + ${config.telefono}"></div>
+    <div class="biz-addr" th:if="${config != null and config.rfc != null}" th:text="'RFC: ' + ${config.rfc}"></div>
+</div>
+
+<hr class="sep-solid">
+
+<div class="info-section">
+    <div class="ticket-num">TICKET # <span th:text="${venta.id}">001</span></div>
+    <div class="info-row">
+        <span>Fecha:</span>
+        <span th:text="${#temporals.format(venta.fecha, 'dd/MM/yyyy')}">--/--/--</span>
+    </div>
+    <div class="info-row">
+        <span>Hora:</span>
+        <span th:text="${#temporals.format(venta.fecha, 'HH:mm:ss')}">00:00:00</span>
+    </div>
+    <div class="info-row">
+        <span>Atendido por:</span>
+        <span th:text="${venta.usuario.username}">cajero</span>
+    </div>
+</div>
+
+<hr class="sep-dashed">
+
+<!-- ════════ Detalle de artículos ════════ -->
+<table class="items-table">
+    <thead>
+        <tr>
+            <th style="width:30px">CANT</th>
+            <th>DESCRIPCIÓN</th>
+            <th class="right">TOTAL</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr th:each="det : ${venta.detalles}">
+            <td class="center" th:text="${det.cantidad}">1</td>
+            <td>
+                <div class="item-name">
+                    <span th:if="${det.canjeado}">🎁 </span><span th:text="${det.producto.nombre}">Platillo</span>
+                </div>
+                <div class="item-nota" th:if="${det.notas != null and not #strings.isEmpty(det.notas)}"
+                     th:text="'→ ' + ${det.notas}"></div>
+                <div style="font-size:10px;color:#777" th:if="${!det.canjeado}"
+                     th:text="'$' + ${det.precioUnidad} + ' c/u'">$0.00 c/u</div>
+                <div style="font-size:10px;font-weight:bold" th:if="${det.canjeado}">Canjeado por puntos</div>
+            </td>
+            <td class="right" th:text="'$' + ${#numbers.formatDecimal(det.subtotal, 1, 2)}">$0.00</td>
+        </tr>
+    </tbody>
+</table>
+
+<hr class="sep-solid">
+
+<!-- ════════ Totales y pago ════════ -->
+<div class="total-section">
+    <div class="total-row grand">
+        <span>TOTAL:</span>
+        <span th:text="'$' + ${#numbers.formatDecimal(venta.total, 1, 2)}">$0.00</span>
+    </div>
+
+    <hr class="sep-dashed">
+
+    <!-- Método de pago -->
+    <div class="total-row">
+        <span>Método de pago:</span>
+        <strong th:text="${venta.metodoPago}">EFECTIVO</strong>
+    </div>
+
+    <!-- Efectivo -->
+    <div class="total-row" th:if="${venta.montoEfectivo != null and venta.montoEfectivo > 0}">
+        <span>Efectivo recibido:</span>
+        <span th:text="'$' + ${#numbers.formatDecimal(venta.montoEfectivo, 1, 2)}">$0.00</span>
+    </div>
+
+    <!-- Tarjeta -->
+    <div class="total-row" th:if="${venta.montoTarjeta != null and venta.montoTarjeta > 0}">
+        <span>Tarjeta:</span>
+        <span th:text="'$' + ${#numbers.formatDecimal(venta.montoTarjeta, 1, 2)}">$0.00</span>
+    </div>
+
+    <!-- Cambio (solo si hay cambio positivo) -->
+    <div class="total-row cambio" th:if="${venta.cambio != null and venta.cambio > 0}">
+        <span>Su cambio:</span>
+        <strong th:text="'$' + ${#numbers.formatDecimal(venta.cambio, 1, 2)}">$0.00</strong>
+    </div>
+
+    <!-- Programa de Lealtad -->
+    <th:block th:if="${venta.cliente != null}">
+        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed #000;"></div>
+        <div class="total-row">
+            <span>Cliente V.I.P:</span>
+            <strong th:text="${venta.cliente.nombre}">Nombre</strong>
+        </div>
+        <div class="total-row" th:if="${venta.puntosGanados != null and venta.puntosGanados > 0}">
+            <span>Puntos Generados:</span>
+            <span th:text="'+' + ${venta.puntosGanados} + ' ★'">0 ★</span>
+        </div>
+        <div class="total-row" th:if="${venta.puntosCanjeados != null and venta.puntosCanjeados > 0}">
+            <span>Puntos Canjeados:</span>
+            <span th:text="'-' + ${venta.puntosCanjeados} + ' ★'">0 ★</span>
+        </div>
+    </th:block>
+</div>
+
+<hr class="sep-solid">
+
+<!-- ════════ Footer ════════ -->
+<div class="footer">
+    <div class="thanks">★ ¡GRACIAS POR SU PREFERENCIA! ★</div>
+    <div class="msg" th:text="${config != null ? config.mensajeTicket : 'Conserve su ticket para cualquier aclaración.'}">
+        Conserve su ticket para cualquier aclaración.
+    </div>
+    <div class="msg" style="margin-top:4px">Vuelva pronto 😊</div>
+    <div class="powered">— Ventro Resto —</div>
+</div>
+
+</body>
+</html>

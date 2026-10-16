@@ -1,0 +1,31 @@
+.receipt-page { overflow-wrap: anywhere; }
+.receipt-page label { display: block; margin: .4rem 0; }
+.receipt-page h2 { font-size: 1.15rem; }
+.receipt-page a { color: #79ded0; }
+.receipt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 1rem; }
+.receipt-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.receipt-toolbar .form-control { width: auto; flex: 1; min-width: 120px; }
+.receipt-line { margin: 1rem 0; min-width: 0; }
+.receipt-line legend { font-size: 1.1rem; }
+.receipt-actions { margin: 1rem 0; }
+.receipt-page [hidden] { display: none !important; }
+.receipt-reference { overflow-wrap: anywhere; }
+.receipt-page :focus-visible { outline: 3px solid #79ded0; outline-offset: 3px; }
+.receipt-page input[readonly] { color: #eee; opacity: 1; }
+.receipt-page button:disabled { opacity: .6; }
+@media (max-width: 600px) {
+    .receipt-page .card-custom { padding: 1rem; }
+    .receipt-page .receipt-toolbar { align-items: stretch; flex-direction: column; }
+    .receipt-page .receipt-toolbar .form-control { width: 100%; }
+}
+/* Bootstrap usa fondo claro al deshabilitar: mantener contraste en captura congelada. */
+.receipt-page .form-control:disabled,
+.receipt-page .form-select:disabled,
+.receipt-page .form-control[readonly] {
+    background-color: #202431;
+    color: #e8eaf0;
+    -webkit-text-fill-color: #e8eaf0;
+    opacity: 1;
+}
+
+.receipt-reason { white-space: pre-wrap; }

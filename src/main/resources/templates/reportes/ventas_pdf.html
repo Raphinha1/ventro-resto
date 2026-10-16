@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte de Ventas Diario - Ventro Resto</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; margin: 0; padding: 20px; font-size: 11px; color: #333; }
+        .header { border-bottom: 2px solid #2AB6A1; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .header h1 { margin: 0; color: #2AB6A1; font-size: 22px; }
+        .info { text-align: right; }
+        .metrics { display: flex; gap: 20px; margin-bottom: 20px; }
+        .metric-box { flex: 1; padding: 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; text-align: center; }
+        .metric-val { font-size: 18px; font-weight: bold; color: #2AB6A1; margin-top: 5px; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .table th { background-color: #f2f2f2; border: 1px solid #ddd; padding: 8px; text-align: left; text-transform: uppercase; font-size: 10px; }
+        .table td { border: 1px solid #ddd; padding: 6px; vertical-align: middle; }
+        .text-end { text-align: right; }
+        .footer { margin-top: 30px; font-size: 9px; border-top: 1px solid #ddd; padding-top: 10px; text-align: center; color: #777; }
+        @media print { .no-print { display: none; } }
+        .btn-print { background: #2AB6A1; color: #fff; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="text-align: center;">
+        <button onclick="window.print()" class="btn-print">Imprimir a PDF</button>
+        <button onclick="window.history.back()" style="padding: 10px 20px; cursor: pointer;">Regresar</button>
+    </div>
+
+    <div class="header">
+        <div>
+            <h1>📊 REPORTE DE VENTAS DIARIO</h1>
+            <p>Sistema Ventro Resto - Control de Facturación</p>
+        </div>
+        <div class="info">
+            <p><strong>FECHA CONSULTA:</strong> <span th:text="${#temporals.format(fechaActual, 'dd/MM/yyyy')}">--/--/--</span></p>
+            <p><strong>REPORTE ID:</strong> <span th:text="${T(java.util.UUID).randomUUID().toString().substring(0,8).toUpperCase()}">VEN-01</span></p>
+        </div>
+    </div>
+
+    <div class="metrics">
+        <div class="metric-box">
+            <div style="font-size: 10px; text-transform: uppercase; color: #666;">Total Tickets</div>
+            <div class="metric-val" th:text="${ventas.size()}">0</div>
+        </div>
+        <div class="metric-box">
+            <div style="font-size: 10px; text-transform: uppercase; color: #666;">Total Recaudado</div>
+            <div class="metric-val" th:text="'$' + ${totalRecaudado}">$0.00</div>
+        </div>
+        <div class="metric-box">
+            <div style="font-size: 10px; text-transform: uppercase; color: #666;">Ticket Promedio</div>
+            <div class="metric-val" 
+                 th:text="${ventas.size() > 0 ? '$' + #numbers.formatDecimal(totalRecaudado.divide(new java.math.BigDecimal(ventas.size()), 2, T(java.math.RoundingMode).HALF_UP), 1, 2) : '$0.00'}">
+                $0.00
+            </div>
+        </div>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID Ticket</th>
+                <th>Hora</th>
+                <th>Descripción de Productos</th>
+                <th>Método</th>
+                <th>Cajero</th>
+                <th class="text-end">Monto Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="v : ${ventas}">
+                <td th:text="'#' + ${v.id}">1</td>
+                <td th:text="${#temporals.format(v.fecha, 'HH:mm:ss')}">00:00</td>
+                <td>
+                    <div th:each="det : ${v.detalles}" style="margin-bottom: 2px;">
+                        <span th:text="${det.cantidad} + 'x ' + ${det.producto.nombre}">1x Item</span>
+                    </div>
+                </td>
+                <td th:text="${v.metodoPago}">EFECTIVO</td>
+                <td th:text="${v.usuario.username}">User</td>
+                <td class="text-end fw-bold" th:text="'$' + ${v.total}">$0.00</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Este reporte es de carácter informativo y para control interno.</p>
+        <p>VENTRO RESTO © 2026 - Todos los derechos reservados.</p>
+    </div>
+</body>
+</html>

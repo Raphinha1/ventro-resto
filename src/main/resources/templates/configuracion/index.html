@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<style>
+        .main-content { margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 4rem 2rem; }
+        .card-form { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 2.5rem; width: 100%; max-width: 850px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .btn-submit { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border: none; color: #fff; border-radius: 12px; padding: 0.9rem; font-weight: 700; font-size: 1rem; width: 100%; box-shadow: 0 4px 15px rgba(42,182,161,0.3); transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; }
+        .btn-submit:hover { transform: translateY(-1px); color: white;}
+        .form-control, .form-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 10px; padding: 0.75rem 1rem; }
+        .form-control:focus, .form-select:focus { background: rgba(255,255,255,0.08); border-color: var(--primary); color: #fff; box-shadow: 0 0 0 0.25rem rgba(42,182,161,0.2); }
+        .form-label { color: #A2A8BA; font-size: 0.72rem; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem; display: block; letter-spacing: 0.05em;}
+        option { background-color: #1A1D2E; color: #E8EAF0; }
+        .section-header { border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1.5rem; margin-top: 2rem; color: #fff; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+    </style>
+<main class="main-content">
+    <div class="card-form">
+        <!-- Título Dinámico -->
+        <div class="text-center mb-4">
+            <div style="font-size:3rem; margin-bottom:.5rem;">
+                <span sec:authorize="hasRole('SUPER_ADMIN')">🛡️</span>
+                <span sec:authorize="!hasRole('SUPER_ADMIN')">⚙️</span>
+            </div>
+            <h2 class="fw-bold mb-1">
+                <span sec:authorize="hasRole('SUPER_ADMIN')">Panel de Control Maestro</span>
+                <span sec:authorize="!hasRole('SUPER_ADMIN')" th:text="${titulo}">Ajustes Generales</span>
+            </h2>
+            <p style="color:var(--text-muted); font-size:.85rem;">
+                <span sec:authorize="hasRole('SUPER_ADMIN')">Gestión comercial, licenciamiento y niveles de plan SaaS</span>
+                <span sec:authorize="!hasRole('SUPER_ADMIN')">Configuración regional, de ticket y fiscales del negocio</span>
+            </p>
+        </div>
+
+        <div th:if="${mensajeExito}" class="alert alert-success" style="border-radius: 12px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: #34d399;" th:text="${mensajeExito}"></div>
+        <div th:if="${mensajeError}" class="alert alert-danger" style="border-radius: 12px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #f87171;" th:text="${mensajeError}"></div>
+
+        <form th:action="@{/configuracion/guardar}" th:object="${configuracion}" method="post">
+            
+            <!-- SECCIÓN PARA ADMINISTRADOR NORMAL -->
+            <div sec:authorize="!hasRole('SUPER_ADMIN')">
+                <div class="section-header">
+                    <i class="bi bi-shop text-primary fs-5"></i> Identidad del Negocio
+                </div>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre Comercial *</label>
+                        <input type="text" th:field="*{nombreNegocio}" class="form-control" placeholder="Ventro Resto" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Slogan o Lema</label>
+                        <input type="text" th:field="*{slogan}" class="form-control" placeholder="El mejor sabor">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">RFC / NIT / Identificador Fiscal</label>
+                        <input type="text" th:field="*{rfc}" class="form-control" placeholder="XAXX010101000">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Teléfono Local</label>
+                        <input type="text" th:field="*{telefono}" class="form-control" placeholder="55 1234 5678">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Dirección Completa</label>
+                        <textarea th:field="*{direccion}" class="form-control" rows="2" placeholder="Calle, Número, Colonia, Ciudad, C.P."></textarea>
+                    </div>
+                </div>
+
+                <div class="section-header mt-5">
+                    <i class="bi bi-cash-coin text-warning fs-5"></i> Finanzas y Moneda
+                </div>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label">Código Moneda (ISO)</label>
+                        <input type="text" th:field="*{moneda}" class="form-control" placeholder="MXN, USD, EUR..." maxlength="5">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Símbolo</label>
+                        <input type="text" th:field="*{simboloMoneda}" class="form-control" placeholder="$, €, £..." maxlength="5">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Porcentaje Impuesto (%)</label>
+                        <input type="number" th:field="*{porcentajeIva}" class="form-control" step="0.01" placeholder="16.00">
+                    </div>
+                    
+                    <div class="col-md-6 mt-4">
+                        <div class="form-check form-switch d-flex align-items-center gap-2">
+                            <input class="form-check-input" type="checkbox" role="switch" id="ivaIncluidoCheck" th:field="*{ivaIncluido}" style="width: 2.5rem; height: 1.2rem; cursor: pointer;">
+                            <div>
+                                <label class="form-check-label text-white mb-0" for="ivaIncluidoCheck" style="font-weight: 500;">Precios ya incluyen Impuestos</label>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Si se activa, el IVA se desglosará internamente en lugar de sumarse al final.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mt-4">
+                        <div class="form-check form-switch d-flex align-items-center gap-2">
+                            <input class="form-check-input" type="checkbox" role="switch" id="descCheck" th:field="*{permitirDescuentos}" style="width: 2.5rem; height: 1.2rem; cursor: pointer;">
+                            <div>
+                                <label class="form-check-label text-white mb-0" for="descCheck" style="font-weight: 500;">Permitir Descuentos Manuales</label>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Habilita o deshabilita la opción en el POS.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-header mt-5">
+                    <i class="bi bi-receipt-cutoff text-success fs-5"></i> Ticket de Venta
+                </div>
+
+                <div class="row g-3 mb-5">
+                    <div class="col-12">
+                        <label class="form-label">Mensaje al pie del Ticket</label>
+                        <textarea th:field="*{mensajeTicket}" class="form-control" rows="2" placeholder="¡Vuelva pronto! Síguenos en FB: @Restaurante"></textarea>
+                        <small style="color:var(--text-muted); font-size: 0.75rem;">Este texto aparecerá al final de todos los recibos impresos para los clientes.</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN EXCLUSIVA PARA SUPER ADMIN -->
+            <div sec:authorize="hasRole('SUPER_ADMIN')">
+                
+                <!-- Tarjeta de Información del Cliente -->
+                <div style="background: rgba(42,182,161,0.03); border: 1px solid rgba(42,182,161,0.15); border-radius: 20px; padding: 2rem; margin-bottom: 2.5rem;">
+                    <div class="section-header" style="margin-top: 0; border-bottom: none; margin-bottom: 1.5rem;">
+                        <i class="bi bi-info-circle-fill text-primary"></i> Información del Cliente
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-7">
+                            <label class="form-label">Nombre del Restaurante</label>
+                            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 0.8rem 1.2rem; border-radius: 12px; color: #fff; font-weight: 600;">
+                                <i class="bi bi-shop me-2 text-primary"></i> <span th:text="*{nombreNegocio}">Ventro RESTO</span>
+                            </div>
+                            <input type="hidden" th:field="*{nombreNegocio}">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Vencimiento de Licencia</label>
+                            <input type="date" th:field="*{fechaExpiracion}" class="form-control" style="border-color: rgba(42,182,161,0.3);">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tarjeta de Plan SaaS -->
+                <div style="background: rgba(78,149,255,0.03); border: 1px solid rgba(78,149,255,0.15); border-radius: 20px; padding: 2rem; margin-bottom: 2.5rem;">
+                    <div class="section-header" style="margin-top: 0; border-bottom: none; margin-bottom: 1.5rem;">
+                        <i class="bi bi-shield-lock-fill text-info"></i> Gestión de Suscripción
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Nivel de Plan Seleccionado</label>
+                        <select th:field="*{nivelPlan}" class="form-select" id="selectorPlan" onchange="toggleCustomModules(this.value)" 
+                                style="height: 65px; font-weight: 700; font-size: 1.15rem; border-color: rgba(78,149,255,0.3); background-color: rgba(26,29,46,0.8);">
+                            <option value="LITE">🥉 Plan LITE — 2 Usuarios, 1 Disp.</option>
+                            <option value="PRO">🥈 Plan PRO — 10 Usuarios, 3 Disp.</option>
+                            <option value="PREMIUM">🥇 Plan PREMIUM — Ilimitado, 10 Disp.</option>
+                            <option value="CUSTOM">🎛️ Plan A la Carta — Personalizado</option>
+                        </select>
+                    </div>
+        
+                    <!-- Panel CUSTOM: checkboxes de módulos -->
+                    <div id="panelCustom" style="display:none; margin-top: 1.5rem;">
+                        <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 1.5rem;">
+                            <div style="font-size: 0.8rem; color: #7e869e; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="bi bi-toggles text-info"></i> Activa los módulos contratados manualmente
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-4"><div class="form-check form-switch d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" role="switch" th:field="*{modMesas}" id="modMesas"><label class="form-check-label text-white mb-0" for="modMesas">Mapa de Mesas</label></div></div>
+                                <div class="col-md-4"><div class="form-check form-switch d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" role="switch" th:field="*{modReservas}" id="modReservas"><label class="form-check-label text-white mb-0" for="modReservas">Reservas</label></div></div>
+                                <div class="col-md-4"><div class="form-check form-switch d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" role="switch" th:field="*{modKds}" id="modKds"><label class="form-check-label text-white mb-0" for="modKds">KDS Cocina</label></div></div>
+                                <div class="col-md-4"><div class="form-check form-switch d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" role="switch" th:field="*{modClientes}" id="modClientes"><label class="form-check-label text-white mb-0" for="modClientes">CRM Clientes</label></div></div>
+                                <div class="col-md-4"><div class="form-check form-switch d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" role="switch" th:field="*{modCaja}" id="modCaja"><label class="form-check-label text-white mb-0" for="modCaja">Caja</label></div></div>
+                                <div class="col-md-4"><div class="form-check form-switch d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" role="switch" th:field="*{modHistorial}" id="modHistorial"><label class="form-check-label text-white mb-0" for="modHistorial">Historial</label></div></div>
+                                <div class="col-md-4"><div class="form-check form-switch d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" role="switch" th:field="*{modReportes}" id="modReportes"><label class="form-check-label text-white mb-0" for="modReportes">Reportes</label></div></div>
+                                <div class="col-md-4"><div class="form-check form-switch d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" role="switch" th:field="*{modGastos}" id="modGastos"><label class="form-check-label text-white mb-0" for="modGastos">Gastos</label></div></div>
+                                <div class="col-md-4"><div class="form-check form-switch d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" role="switch" th:field="*{modAsistencia}" id="modAsistencia"><label class="form-check-label text-white mb-0" for="modAsistencia">Asistencia</label></div></div>
+                                <div class="col-md-4"><div class="form-check form-switch d-flex align-items-center gap-2"><input class="form-check-input" type="checkbox" role="switch" th:field="*{modIa}" id="modIa"><label class="form-check-label text-white mb-0" for="modIa">IA Predictiva</label></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tarjeta de Límites y Costos -->
+                <div style="background: rgba(251,191,36,0.02); border: 1px solid rgba(251,191,36,0.12); border-radius: 20px; padding: 2rem;">
+                    <div class="section-header" style="margin-top: 0; border-bottom: none; margin-bottom: 1.5rem;">
+                        <i class="bi bi-database-fill-gear text-warning"></i> Parámetros y Cobro
+                    </div>
+                    
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Costo Mensual Acordado</label>
+                            <div class="input-group">
+                                <span class="input-group-text border-secondary" style="background: rgba(42,182,161,0.15); color: var(--primary); border-right: none;" th:text="${configuracion.simboloMoneda}">$</span>
+                                <input type="number" th:field="*{precioPersonalizado}" id="precioPersonalizado" class="form-control" step="0.01" style="border-left: none; font-weight: 700; color: #fff; font-size: 1.1rem;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Límite Máx. Dispositivos</label>
+                            <div class="input-group">
+                                <span class="input-group-text border-secondary" style="background: rgba(255,255,255,0.05); color: #A2A8BA; border-right: none;"><i class="bi bi-pc-display"></i></span>
+                                <input type="number" th:field="*{limiteDispositivos}" id="limiteDispositivos" class="form-control" style="border-left: none; font-weight: 600;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Límite Máx. Usuarios</label>
+                            <div class="input-group">
+                                <span class="input-group-text border-secondary" style="background: rgba(255,255,255,0.05); color: #A2A8BA; border-right: none;"><i class="bi bi-people"></i></span>
+                                <input type="number" th:field="*{limiteUsuarios}" id="limiteUsuarios" class="form-control" style="border-left: none; font-weight: 600;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Límite Máx. Productos</label>
+                            <div class="input-group">
+                                <span class="input-group-text border-secondary" style="background: rgba(255,255,255,0.05); color: #A2A8BA; border-right: none;"><i class="bi bi-box-seam"></i></span>
+                                <input type="number" th:field="*{limiteProductos}" id="limiteProductos" class="form-control" style="border-left: none; font-weight: 600;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Notas de Soporte / Contrato (Privado)</label>
+                        <textarea th:field="*{notasMaestras}" class="form-control" rows="4" 
+                                  placeholder="Detalles sobre el contrato del cliente, incidencias, etc. Estas notas NO son visibles para el restaurante." 
+                                  style="background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.05);"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function toggleCustomModules(val) {
+                    var panel = document.getElementById('panelCustom');
+                    if(panel) panel.style.display = (val === 'CUSTOM') ? 'block' : 'none';
+                    
+                    // Solo autocompletar si no es CUSTOM
+                    if (val !== 'CUSTOM') {
+                        var u = document.getElementById('limiteUsuarios');
+                        var p = document.getElementById('limiteProductos');
+                        var d = document.getElementById('limiteDispositivos');
+                        var pr = document.getElementById('precioPersonalizado');
+                        
+                        if (val === 'LITE') {
+                            u.value = 2; p.value = 50; d.value = 1; pr.value = 349.00;
+                        } else if (val === 'PRO') {
+                            u.value = 10; p.value = 500; d.value = 3; pr.value = 899.00;
+                        } else if (val === 'PREMIUM') {
+                            u.value = 99; p.value = 9999; d.value = 10; pr.value = 1699.00;
+                        }
+                    }
+                }
+                document.addEventListener('DOMContentLoaded', function() {
+                    var selector = document.getElementById('selectorPlan');
+                    if(selector) toggleCustomModules(selector.value);
+                });
+            </script>
+
+            <div class="d-flex justify-content-end mt-4">
+                <button type="submit" class="btn-submit" style="width: auto; padding-left: 3rem; padding-right: 3rem;">
+                    <i class="bi bi-floppy-fill me-2"></i> 
+                    <span sec:authorize="hasRole('SUPER_ADMIN')">Guardar Configuración Maestra</span>
+                    <span sec:authorize="!hasRole('SUPER_ADMIN')">Guardar Ajustes</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<style>
+        .page-header { margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+        .page-header h1 { font-size: 1.6rem; font-weight: 700; color: #fff; margin-bottom: 0.2rem; }
+        .table-custom { --bs-table-bg: transparent; --bs-table-color: var(--text-main); color: var(--text-main); border-color: var(--border); }
+        .table-custom thead th { background: rgba(255,255,255,.04) !important; color: rgba(255,255,255,.5); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; border-color: var(--border); padding: 0.85rem 1rem; }
+        .table-custom tbody tr { background: transparent !important; }
+        .table-custom tbody td { padding: 0.85rem 1rem; border-color: var(--border); vertical-align: middle; font-size: 0.9rem; background: transparent !important; color: var(--text-main); }
+        .table-custom tbody tr:hover td { background: rgba(255,255,255,0.03) !important; }
+        .btn-sm-icon{width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);text-decoration:none;font-size:0.9rem;transition:all 0.15s}
+        .btn-sm-icon.editar{background:rgba(78,149,255,0.1);color:#4e95ff;border-color:rgba(78,149,255,0.2)}
+        .btn-sm-icon.editar:hover{background:rgba(78,149,255,0.2);color:#4e95ff;border-color:#4e95ff}
+        .btn-sm-icon.eliminar{background:rgba(255,126,126,0.1);color:#ff7e7e;border-color:rgba(255,126,126,0.2)}
+        .btn-sm-icon.eliminar:hover{background:rgba(255,126,126,0.2);color:#ff7e7e;border-color:#ff7e7e}
+        .alerta-exito{background:rgba(25,135,84,0.2);color:#6ee7b4;border:none;border-radius:12px;padding:0.85rem 1.25rem;margin-bottom:1.5rem}
+        .alerta-error{background:rgba(220,53,69,0.2);color:#ff9ca6;border:none;border-radius:12px;padding:0.85rem 1.25rem;margin-bottom:1.5rem}
+    </style>
+<!-- CONTENIDO -->
+<main class="main-content">
+    <!-- Encabezado -->
+    <div class="page-header d-flex align-items-center justify-content-between">
+        <div>
+            <!--
+                th:text → Reemplaza el contenido HTML del tag con el valor de la expresión.
+                Si 'titulo' es null, muestra 'Categorías'.
+            -->
+            <h1><i class="bi bi-tags-fill me-2" style="color:var(--primary)"></i>
+                <span th:text="${titulo}">Gestión de Categorías</span>
+            </h1>
+            <p style="color:var(--text-muted);font-size:.85rem;margin:0">
+                Administra las categorías de productos e ingredientes
+            </p>
+        </div>
+        <!-- Botón para abrir modal de creación -->
+        <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalCategoria" onclick="abrirModalNuevo()">
+            <i class="bi bi-plus-lg me-1"></i> Nueva Categoría
+        </button>
+    </div>
+
+    <!--
+        th:if → Muestra el div SOLO si el atributo flash 'mensajeExito' existe en el modelo.
+        Los mensajes flash son enviados por el controlador mediante RedirectAttributes.
+    -->
+    <div th:if="${mensajeExito}" class="alerta-exito">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${mensajeExito}"></span>
+    </div>
+
+    <div th:if="${mensajeError}" class="alerta-error">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${mensajeError}"></span>
+    </div>
+
+    <!-- Tabla de categorías -->
+    <div class="card-custom">
+        <!-- Caso: sin registros -->
+        <div th:if="${#lists.isEmpty(categorias)}" class="empty-state">
+            <div class="empty-icon">🏷️</div>
+            <h5 style="color:rgba(255,255,255,.6)">No hay categorías registradas</h5>
+            <p style="font-size:.85rem">Crea la primera categoría usando el botón de arriba.</p>
+        </div>
+
+        <!-- Caso: con registros -->
+        <div th:unless="${#lists.isEmpty(categorias)}">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <span style="font-size:.82rem;color:var(--text-muted)">
+                    <!--
+                        th:text con expresión: concatena texto + variable.
+                        ${#lists.size(categorias)} → devuelve el tamaño de la lista.
+                    -->
+                    Total: <strong th:text="${#lists.size(categorias)}" style="color:#fff">0</strong> categorías
+                </span>
+            </div>
+
+            <table class="table table-custom table-borderless">
+                <thead>
+                    <tr>
+                        <th>#ID</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!--
+                        th:each → Itera sobre la lista 'categorias'.
+                        Por cada elemento genera un <tr>.
+                        'categoria' es la variable de iteración.
+                    -->
+                    <tr th:each="categoria : ${categorias}">
+                        <td>
+                            <span th:text="${categoria.id}">1</span>
+                        </td>
+                        <td>
+                            <span th:text="${categoria.nombre}">Nombre</span>
+                        </td>
+                        <td>
+                            <span th:text="${categoria.descripcion != null and !categoria.descripcion.isEmpty()} ? ${categoria.descripcion} : '—'">
+                                Descripción
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-2 justify-content-center">
+                                <!-- Botón Editar: abre modal compartido -->
+                                <button type="button"
+                                        class="btn-sm-icon editar"
+                                        title="Editar categoría"
+                                        th:data-id="${categoria.id}"
+                                        th:data-nombre="${categoria.nombre}"
+                                        th:data-descripcion="${categoria.descripcion}"
+                                        onclick="abrirModalEditar(this)">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                                <!-- Botón Eliminar: abre modal de confirmación -->
+                                <button type="button"
+                                        class="btn-sm-icon eliminar"
+                                        title="Eliminar categoría"
+                                        th:data-id="${categoria.id}"
+                                        th:data-nombre="${categoria.nombre}"
+                                        onclick="abrirModalEliminar(this)">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<!-- Formulario oculto para el DELETE -->
+<form id="formEliminar" method="post">
+    <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+</form>
+
+<!-- Modal de confirmación Bootstrap -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1A1D2E;border:1px solid rgba(255,255,255,0.1);border-radius:16px">
+            <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.08)">
+                <h5 class="modal-title" style="color:#fff"><i class="bi bi-exclamation-triangle-fill me-2" style="color:#ff7e7e"></i>Confirmar eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="color:rgba(255,255,255,0.7)">
+                ¿Estás seguro de eliminar la categoría <strong id="nombreCategoria" style="color:#fff"></strong>?
+                <p class="mt-2 mb-0" style="font-size:.82rem;color:rgba(255,255,255,.4)">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid rgba(255,255,255,0.08)">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn" id="btnConfirmarEliminar"
+                        style="background:linear-gradient(135deg,#1E8E7C,#c23d16);color:#fff;border:none;border-radius:8px;padding:.5rem 1.2rem;font-weight:600">
+                    <i class="bi bi-trash3-fill me-1"></i>Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalEliminar(btn) {
+        const id     = btn.dataset.id;
+        const nombre = btn.dataset.nombre;
+        const tipoUrl = '[[${tipoUrl}]]';
+        document.getElementById('nombreCategoria').textContent = nombre;
+        // Actualizamos la URL del form con el ID real
+        document.getElementById('formEliminar').action = '/categorias/' + tipoUrl + '/eliminar/' + id;
+        const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+        document.getElementById('btnConfirmarEliminar').onclick = function() {
+            document.getElementById('formEliminar').submit();
+        };
+        modal.show();
+    }
+</script>
+<!-- ============================================
+     Modal: Crear / Editar Categoría
+============================================ -->
+<div class="modal fade" id="modalCategoria" tabindex="-1" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+        <div class="modal-content" style="background: rgba(26,29,46,0.92); border: 1px solid rgba(255,255,255,0.09); border-radius: 28px; box-shadow: 0 32px 64px rgba(0,0,0,0.55);">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:42px;height:42px;background:rgba(42,182,161,0.15);border:1px solid rgba(42,182,161,0.25);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.2rem;">
+                        <i class="bi bi-tags-fill"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" style="font-size:1.15rem;" id="modalCategoriaTitulo">Nueva Categoría</h5>
+                        <div style="font-size:.78rem; color:var(--text-muted);" id="modalCategoriaSub">Completa los campos y guarda</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white opacity-50 ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form th:action="@{/categorias/{tipoUrl}/guardar(tipoUrl=${tipoUrl})}" th:object="${nuevaCategoria}" method="post">
+                <input type="hidden" id="categoriaId" name="id">
+                <div class="modal-body px-4 py-4">
+
+                    <div class="mb-3">
+                        <label class="form-label-custom">Nombre de la Categoría <span style="color:var(--primary)">*</span></label>
+                        <input type="text" id="categoriaNombre" name="nombre" class="form-control" placeholder="Ej. Lácteos, Carnes, Bebidas..." required>
+                    </div>
+
+                    <div>
+                        <label class="form-label-custom">Descripción</label>
+                        <textarea id="categoriaDescripcion" name="descripcion" class="form-control" rows="3" placeholder="Describe brevemente esta categoría..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 px-4 pb-4 pt-0 d-flex gap-2">
+                    <button type="button" class="btn-form-cancel" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-form-submit flex-grow-1" id="btnSubmitCategoria">
+                        <i class="bi bi-floppy-fill"></i> <span id="btnCategoriaLabel">Crear Categoría</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalNuevo() {
+        document.getElementById('modalCategoriaTitulo').textContent = 'Nueva Categoría';
+        document.getElementById('modalCategoriaSub').textContent = 'Completa los campos y guarda';
+        document.getElementById('btnCategoriaLabel').textContent = 'Crear Categoría';
+        document.getElementById('categoriaId').value = '';
+        document.getElementById('categoriaNombre').value = '';
+        document.getElementById('categoriaDescripcion').value = '';
+    }
+
+    function abrirModalEditar(btn) {
+        document.getElementById('modalCategoriaTitulo').textContent = 'Editar Categoría';
+        document.getElementById('modalCategoriaSub').textContent = 'Modifica los datos y guarda';
+        document.getElementById('btnCategoriaLabel').textContent = 'Guardar Cambios';
+        document.getElementById('categoriaId').value = btn.dataset.id;
+        document.getElementById('categoriaNombre').value = btn.dataset.nombre;
+        document.getElementById('categoriaDescripcion').value = btn.dataset.descripcion;
+        new bootstrap.Modal(document.getElementById('modalCategoria')).show();
+    }
+</script>
+
+</body>
+</html>

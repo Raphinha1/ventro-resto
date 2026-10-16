@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<main class="main-content">
+
+<style>
+    .ia-header { background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); border-radius: 20px; padding: 2rem 2.5rem; margin-bottom: 2rem; border: 1px solid rgba(99,102,241,0.3); position: relative; overflow: hidden; }
+    .ia-header::before { content: ''; position: absolute; top: -50%; right: -10%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(99,102,241,0.2), transparent); border-radius: 50%; }
+    .ia-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4); border-radius: 20px; padding: 0.3rem 0.8rem; font-size: 0.72rem; color: #818cf8; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
+    .ia-badge .dot { width: 6px; height: 6px; background: #818cf8; border-radius: 50%; animation: pulse-dot 1.5s infinite; }
+    @keyframes pulse-dot { 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.5; transform:scale(1.5); } }
+
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .kpi-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem 1.5rem; }
+    .kpi-value { font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 0.3rem; }
+    .kpi-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .urgencia-critico { color: #ef4444; }
+    .urgencia-alto { color: #f97316; }
+    .urgencia-medio { color: #eab308; }
+    .urgencia-bajo { color: #22c55e; }
+
+    .badge-critico { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; padding: 0.2rem 0.65rem; font-size: 0.72rem; font-weight: 700; }
+    .badge-alto { background: rgba(249,115,22,0.15); color: #f97316; border: 1px solid rgba(249,115,22,0.3); border-radius: 8px; padding: 0.2rem 0.65rem; font-size: 0.72rem; font-weight: 700; }
+    .badge-medio { background: rgba(234,179,8,0.15); color: #eab308; border: 1px solid rgba(234,179,8,0.3); border-radius: 8px; padding: 0.2rem 0.65rem; font-size: 0.72rem; font-weight: 700; }
+    .badge-bajo { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; padding: 0.2rem 0.65rem; font-size: 0.72rem; font-weight: 700; }
+
+    .rec-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; transition: all 0.2s; }
+    .rec-card:hover { border-color: rgba(99,102,241,0.3); box-shadow: 0 4px 20px rgba(0,0,0,0.2); transform: translateY(-1px); }
+    .rec-card.critico { border-left: 4px solid #ef4444; }
+    .rec-card.alto { border-left: 4px solid #f97316; }
+    .rec-card.medio { border-left: 4px solid #eab308; }
+    .rec-card.bajo { border-left: 4px solid #22c55e; }
+
+    .variable-pill { display: inline-flex; align-items: center; gap: 0.3rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 0.2rem 0.65rem; font-size: 0.72rem; color: var(--text-muted); margin: 0.15rem; }
+    .variable-pill.activo { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.3); color: #818cf8; }
+
+    .confianza-bar { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+    .confianza-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #6366f1, #818cf8); transition: width 0.8s ease; }
+
+    .alert-chip { display: inline-flex; align-items: center; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; padding: 0.25rem 0.6rem; font-size: 0.72rem; color: #ef4444; margin: 0.15rem; }
+
+    .resumen-ia-text { background: rgba(99,102,241,0.06); border: 1px solid rgba(99,102,241,0.15); border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.82rem; color: rgba(255,255,255,0.7); margin-top: 0.75rem; line-height: 1.6; }
+
+    .filter-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .filter-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text-muted); border-radius: 10px; padding: 0.45rem 1rem; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+    .filter-btn:hover, .filter-btn.active { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4); color: #818cf8; }
+
+    .stat-box { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 0.6rem 0.9rem; text-align: center; }
+    .stat-box .val { font-size: 1.1rem; font-weight: 700; color: #fff; }
+    .stat-box .lbl { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
+
+    .horizontal-scroll::-webkit-scrollbar { height: 8px; }
+    .horizontal-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 4px; }
+    .horizontal-scroll::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.4); border-radius: 4px; }
+    .horizontal-scroll::-webkit-scrollbar-thumb:hover { background: rgba(245, 158, 11, 0.6); }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99,102,241, 0.4); border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241, 0.6); }
+</style>
+
+<div class="d-flex justify-content-between align-items-start page-header mb-0">
+    <div>
+        <h1 class="mb-1">🧠 IA Predictiva de Compras</h1>
+        <span style="color:var(--text-muted)">Ventro Intelligence · Análisis multivariable en tiempo real</span>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="location.reload()" class="btn btn-outline-secondary border-0" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border-radius:10px;">
+            <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
+        </button>
+        <a href="/ia/ordenes-compra" class="btn" style="background:#ef4444; color:white; border-radius:10px; font-weight:600;">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Órdenes de Compra
+        </a>
+    </div>
+</div>
+
+<div th:if="${errorIA}" class="alert alert-danger mt-3" th:text="${errorIA}"></div>
+
+<div th:if="${diagnostico}">
+
+    <!-- Hero IA -->
+    <div class="ia-header mt-4">
+        <div class="ia-badge"><span class="dot"></span> ANÁLISIS EN VIVO</div>
+        <h3 class="text-white fw-bold mb-1" style="font-size: 1.4rem;">Diagnóstico de Abastecimiento</h3>
+        <p class="mb-3" style="color:rgba(255,255,255,0.5); font-size:0.88rem;">
+            Variables analizadas: <strong style="color:#818cf8;">Consumo histórico (30/90d)</strong> · 
+            <strong style="color:#818cf8;">Factor fin de semana</strong> · 
+            <strong style="color:#818cf8;">Tasa de merma</strong> · 
+            <strong style="color:#818cf8;">Reservas futuras (7d)</strong> · 
+            <strong style="color:#818cf8;">Cobertura de stock</strong> · 
+            <strong style="color:#818cf8;">Confianza estadística</strong>
+        </p>
+        <div class="row g-3">
+            <div class="col-auto">
+                <div class="stat-box">
+                    <div class="val text-danger" th:text="${diagnostico.insumosEnRiesgo}">0</div>
+                    <div class="lbl">En Riesgo</div>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="stat-box">
+                    <div class="val text-success" th:text="${diagnostico.insumosEstables}">0</div>
+                    <div class="lbl">Estables</div>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="stat-box">
+                    <div class="val text-warning" th:text="'$' + ${#numbers.formatDecimal(diagnostico.inversionTotalEstimada, 1, 2)}">$0</div>
+                    <div class="lbl">Inversión Estimada</div>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="stat-box">
+                    <div class="val" style="color:#818cf8;" th:text="${diagnostico.estadisticas['totalComensalesReservados7d']}">0</div>
+                    <div class="lbl">Comensales Reservados 7d</div>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="stat-box">
+                    <div class="val" style="color:#f97316;" th:text="${diagnostico.estadisticas['factorFinDeSemana']}">0%</div>
+                    <div class="lbl">Factor Fin de Semana</div>
+                </div>
+            </div>
+        </div>
+        <div th:if="${diagnostico.proximaAlertaCritica != 'Ninguno'}" class="mt-3 p-2" style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); border-radius:10px; display:inline-block;">
+            <i class="bi bi-bell-fill text-danger me-1"></i>
+            <span style="color:#f87171; font-size:0.83rem; font-weight:600;">Alerta crítica:</span>
+            <span style="color:rgba(255,255,255,0.8); font-size:0.83rem;" th:text="' ' + ${diagnostico.proximaAlertaCritica} + ' necesita reabastecimiento inmediato'"></span>
+        </div>
+    </div>
+
+
+    <!-- Control de Mermas -->
+    <div th:if="${not #lists.isEmpty(diagnostico.alertasMermas)}" class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h4 class="fw-bold mb-0" style="color: #fcd34d;"><i class="bi bi-recycle me-2"></i>Control de Mermas</h4>
+            <div class="position-relative" style="min-width: 250px;">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3" style="color: var(--text-muted);"></i>
+                <input type="text" id="buscadorMermas" class="form-control" placeholder="Buscar merma..." style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding-left: 2.5rem; border-radius: 10px;" onkeyup="filtrarMermas()">
+            </div>
+        </div>
+        <div class="d-flex gap-3 pb-3 horizontal-scroll" style="overflow-x: auto; flex-wrap: nowrap; scroll-behavior: smooth; -webkit-overflow-scrolling: touch;">
+            <div th:each="merma : ${diagnostico.alertasMermas}" class="merma-card" th:attr="data-nombre=${merma.nombreInsumo}" style="flex: 0 0 auto; width: 340px;">
+                <div class="card-custom p-3 h-100" style="border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.05);">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="fw-bold text-warning" style="font-size: 1.1rem;" th:text="${merma.nombreInsumo}">Insumo</div>
+                        <span class="badge" style="background: rgba(245, 158, 11, 0.2); color: #fcd34d;" th:text="${merma.diasCobertura} + ' días stock'">0 días</span>
+                    </div>
+                    <div style="font-size: .85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        Stock en riesgo: <span class="fw-bold text-white" th:text="${merma.stockEnRiesgo} + ' ' + ${merma.unidadMedida}"></span><br>
+                        Valor estimado en riesgo: <span class="text-danger fw-bold" th:text="'$' + ${merma.costoEnRiesgo}"></span>
+                    </div>
+                    <div style="font-size: .85rem; background: rgba(0,0,0,0.2); padding: .75rem; border-radius: 8px; border-left: 3px solid #f59e0b; margin-bottom: 1rem;">
+                        <i class="bi bi-lightbulb-fill text-warning me-1"></i> <span th:text="${merma.sugerenciaAccion}">Sugerencia</span>
+                    </div>
+                    <button class="btn btn-sm w-100 mt-auto btn-notificar-chef" style="background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3);" onclick="notificarChef(this)">
+                        <i class="bi bi-magic me-1"></i> Solicitar Especial al Chef
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-value urgencia-critico" th:text="${#lists.size(diagnostico.recomendaciones.?[nivelUrgencia == 'CRITICO'])}">0</div>
+            <div class="kpi-label">Críticos</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value urgencia-alto" th:text="${#lists.size(diagnostico.recomendaciones.?[nivelUrgencia == 'ALTO'])}">0</div>
+            <div class="kpi-label">Urgentes</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value urgencia-medio" th:text="${#lists.size(diagnostico.recomendaciones.?[nivelUrgencia == 'MEDIO'])}">0</div>
+            <div class="kpi-label">Planificar</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value urgencia-bajo" th:text="${#lists.size(diagnostico.recomendaciones.?[nivelUrgencia == 'BAJO'])}">0</div>
+            <div class="kpi-label">Estables</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-value" style="color:#818cf8;" th:text="${diagnostico.estadisticas['mermasTotales90d']}">0</div>
+            <div class="kpi-label">Mermas últimos 90d</div>
+        </div>
+    </div>
+
+    <!-- Filtros y Buscador -->
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div class="filter-bar mb-0">
+            <button class="filter-btn active" onclick="filtrarUrgencia('TODOS', this)">Todos</button>
+            <button class="filter-btn" onclick="filtrarUrgencia('CRITICO', this)"><span style="color:#ef4444;">⛔</span> Críticos</button>
+            <button class="filter-btn" onclick="filtrarUrgencia('ALTO', this)"><span style="color:#f97316;">🔴</span> Urgentes</button>
+            <button class="filter-btn" onclick="filtrarUrgencia('MEDIO', this)"><span style="color:#eab308;">🟡</span> Planificar</button>
+            <button class="filter-btn" onclick="filtrarUrgencia('BAJO', this)"><span style="color:#22c55e;">✅</span> Estables</button>
+        </div>
+        <div class="position-relative" style="min-width: 250px;">
+            <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3" style="color: var(--text-muted);"></i>
+            <input type="text" id="buscadorInsumos" class="form-control" placeholder="Buscar insumo..." style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white; padding-left: 2.5rem; border-radius: 10px;" onkeyup="filtrarBuscador()">
+        </div>
+    </div>
+
+    <!-- Lista de recomendaciones -->
+    <div id="listaRecomendaciones" style="max-height: 600px; overflow-y: auto; padding-right: 10px;" class="custom-scrollbar">
+        <div th:each="rec : ${diagnostico.recomendaciones}"
+             th:class="'rec-card ' + ${#strings.toLowerCase(rec.nivelUrgencia)}"
+             th:attr="data-urgencia=${rec.nivelUrgencia}, data-nombre=${rec.nombreInsumo}">
+
+            <div class="row align-items-start g-3">
+                <!-- Columna principal -->
+                <div class="col-md-5">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span th:class="'badge-' + ${#strings.toLowerCase(rec.nivelUrgencia)}"
+                              th:text="${rec.nivelUrgencia}"></span>
+                        <h5 class="mb-0 text-white fw-bold" th:text="${rec.nombreInsumo}">Tomate</h5>
+                    </div>
+                    <div class="text-muted small mb-2">
+                        <i class="bi bi-building me-1"></i>
+                        <span th:text="${rec.proveedor}">Proveedor</span>
+                    </div>
+
+                    <!-- Barra de confianza -->
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span style="font-size:0.7rem; color:var(--text-muted);">Confianza:</span>
+                        <div class="confianza-bar flex-grow-1">
+                            <div class="confianza-fill" th:style="'width:' + ${rec.confianzaPronostico} + '%'"></div>
+                        </div>
+                        <span style="font-size:0.72rem; color:#818cf8; font-weight:700;" th:text="${rec.confianzaPronostico} + '%'"></span>
+                    </div>
+
+                    <!-- Alertas chips -->
+                    <div th:if="${!#lists.isEmpty(rec.senalesAlerta)}">
+                        <span th:each="alerta : ${rec.senalesAlerta}" class="alert-chip" th:text="${alerta}"></span>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="col-md-4">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <div class="val" th:text="${rec.stockActual} + ' ' + ${rec.unidadMedida}">0</div>
+                                <div class="lbl">Stock actual</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <div class="val"
+                                     th:classappend="${rec.diasCobertura <= 2} ? 'text-danger' : (${rec.diasCobertura <= 7} ? 'text-warning' : 'text-success')"
+                                     th:text="${rec.diasCobertura == 999} ? '∞' : ${rec.diasCobertura} + 'd'">0d</div>
+                                <div class="lbl">Cobertura</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <div class="val" th:text="${#numbers.formatDecimal(rec.tasaMerma, 1, 1)} + '%'"
+                                     th:classappend="${rec.tasaMerma > 15} ? 'text-danger' : (${rec.tasaMerma > 5} ? 'text-warning' : '')">0%</div>
+                                <div class="lbl">Tasa merma</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-box">
+                                <div class="val" style="color:#818cf8;" th:text="${rec.reservasProximas > 0} ? ${rec.reservasProximas} : '—'">—</div>
+                                <div class="lbl">Comensales res.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recomendación compra -->
+                <div class="col-md-3 text-end">
+                    <div th:if="${rec.cantidadRecomendada > 0}" class="p-3 rounded-3" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);">
+                        <div class="text-muted small mb-1">Cantidad a pedir</div>
+                        <div class="fw-bold text-white" style="font-size:1.4rem;"
+                             th:text="${rec.cantidadRecomendada} + ' ' + ${rec.unidadMedida}">0</div>
+                        <div class="small" style="color:#818cf8;" th:text="'≈ $' + ${#numbers.formatDecimal(rec.costoEstimado, 1, 2)}">$0</div>
+                    </div>
+                    <div th:if="${rec.cantidadRecomendada <= 0}" class="p-3 rounded-3" style="background:rgba(34,197,94,0.06); border:1px solid rgba(34,197,94,0.2);">
+                        <i class="bi bi-check-circle-fill text-success d-block mb-1" style="font-size:1.5rem;"></i>
+                        <div class="small text-success">Sin compra necesaria</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen IA -->
+            <div class="resumen-ia-text" th:text="${rec.resumenIA}"></div>
+        </div>
+    </div>
+
+</div><!-- fin diagnostico -->
+
+<script>
+let currentUrgencia = 'TODOS';
+
+function filtrarUrgencia(nivel, btn) {
+    if (btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+    currentUrgencia = nivel;
+    aplicarFiltros();
+}
+
+function filtrarBuscador() {
+    aplicarFiltros();
+}
+
+function aplicarFiltros() {
+    const textoBusqueda = document.getElementById('buscadorInsumos').value.toLowerCase();
+    
+    document.querySelectorAll('.rec-card').forEach(card => {
+        const nombreInsumo = card.dataset.nombre.toLowerCase();
+        const urgenciaInsumo = card.dataset.urgencia;
+        
+        const coincideTexto = textoBusqueda === '' || nombreInsumo.includes(textoBusqueda);
+        const coincideUrgencia = currentUrgencia === 'TODOS' || urgenciaInsumo === currentUrgencia;
+        
+        if (coincideTexto && coincideUrgencia) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function filtrarMermas() {
+    const textoBusqueda = document.getElementById('buscadorMermas').value.toLowerCase();
+    
+    document.querySelectorAll('.merma-card').forEach(card => {
+        const nombreInsumo = card.dataset.nombre.toLowerCase();
+        
+        if (textoBusqueda === '' || nombreInsumo.includes(textoBusqueda)) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function notificarChef(btn) {
+    const card = btn.closest('.merma-card');
+    const insumo = card.dataset.nombre;
+    
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Notificando...';
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append('insumo', insumo);
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+    fetch('/kds/api/notificacion-especial', {
+        method: 'POST',
+        body: formData,
+        headers: csrfHeader && csrfToken ? { [csrfHeader]: csrfToken } : {}
+    }).then(response => {
+        if (response.ok) {
+            Swal.fire({
+                title: '¡Chef Notificado!',
+                html: `Se ha enviado la sugerencia de crear un <b>Especial del Día</b> utilizando <b>${insumo}</b> a la pantalla de cocina (KDS).`,
+                icon: 'success',
+                background: '#141721',
+                color: '#E8EAF0',
+                confirmButtonColor: '#2AB6A1',
+                iconColor: '#fcd34d'
+            });
+            
+            btn.innerHTML = '<i class="bi bi-check2-all me-1"></i> Sugerencia Enviada';
+            btn.classList.add('disabled');
+            btn.style.opacity = '0.7';
+        } else {
+            throw new Error('Network response was not ok.');
+        }
+    }).catch(error => {
+        btn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Error al notificar';
+        btn.disabled = false;
+        console.error("Error al notificar al chef:", error);
+    });
+}
+</script>
+
+<!-- SweetAlert2 para alertas interactivas -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<main class="main-content receipt-page">
+<link rel="stylesheet" th:href="@{/css/receipts.css}">
+<header class="page-header"><h1 th:text="${'Reverso #' + reversal.header.id + ' · Recepción #' + reversal.header.receipt_id}"></h1>
+<a th:href="@{/inventario/recepciones/{id}(id=${reversal.header.receipt_id})}">Recepción original</a> · <a th:href="@{/inventario/recepciones}">Historial</a></header>
+<p>Recepción REVERTIDA. Reverso completo confirmado, inmutable y de solo lectura. No documenta una devolución física a proveedor.</p>
+<p th:if="${!reversal.causal}" class="alert alert-warning">No hay integridad causal verificada en las compensaciones. Esta consulta no repara datos.</p>
+<dl class="card-custom">
+<dt>Registrado / actor</dt><dd th:text="${reversal.header.registrado_en + ' · ' + reversal.header.actor}"></dd>
+<dt>Motivo</dt><dd class="receipt-reason" th:text="${reversal.header.motivo}"></dd>
+<dt>Intento</dt><dd class="receipt-reference" th:text="${reversal.header.request_id}"></dd>
+<dt>Versión de huella</dt><dd th:text="${reversal.header.fingerprint_version}"></dd>
+</dl>
+<section aria-label="Compensaciones confirmadas, solo lectura">
+<article th:each="l : ${reversal.lines}" class="card-custom receipt-line">
+<h2 th:text="${'Línea ' + l.line_no + ' · ' + l.insumo_nombre}"></h2>
+<p th:text="${'Salida compensatoria: ' + l.cantidad_base_compensada + ' ' + l.unidad_base_codigo}"></p>
+<p th:text="${'Línea original #' + l.original_receipt_line_id}"></p>
+<p class="receipt-reference" th:text="${'Operación original: ' + l.original_operation_id}"></p>
+<p class="receipt-reference" th:text="${'Operación compensatoria: ' + l.operation_id}"></p>
+<p class="receipt-reference" th:text="${l.causal_ok ? 'Movimiento #' + l.movement_id + ' · ' + l.tipo_movimiento + ' · ' + l.causal_origin + ' · ' + l.causal_reference : 'Sin causa íntegra verificada'}"></p>
+<p th:if="${l.causal_ok}" th:text="${'Saldo resultante registrado: ' + l.resulting_stock + ' (auditoría, no saldo vigente)'}"></p>
+</article></section>
+</main></body></html>

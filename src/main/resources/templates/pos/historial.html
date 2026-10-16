@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::main})}">
+<main class="main-content">
+    <div class="page-header d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h1>📊 Historial de Ventas</h1>
+            <p class="text-muted mb-0" style="font-size: 0.9rem;">Listado cronológico de todas las transacciones realizadas en el sistema</p>
+        </div>
+        <a th:href="@{/pos}" class="btn btn-outline-light d-flex align-items-center gap-2" 
+           style="border-radius:12px; padding: 0.6rem 1.25rem; font-weight:600; font-size: 0.9rem;">
+            <i class="bi bi-arrow-left"></i> Volver al POS
+        </a>
+    </div>
+
+    <div class="card-custom p-0" style="overflow: hidden;">
+        <div class="table-responsive">
+            <table class="table table-custom mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Fecha y Hora</th>
+                        <th>Cajero/Vendedor</th>
+                        <th>Productos</th>
+                        <th>Total</th>
+                        <th class="text-center pe-4">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="venta : ${ventas}">
+                        <td class="ps-4"><span class="fw-bold" th:text="'#' + ${venta.id}">#1</span></td>
+                        <td class="text-muted" th:text="${#temporals.format(venta.fecha, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
+                        <td th:text="${venta.usuario.username}">Cajero</td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                <span th:each="d : ${venta.detalles}" 
+                                      class="badge bg-secondary bg-opacity-25 text-white-50"
+                                      style="font-size: .65rem; font-weight: 500;"
+                                      th:text="${d.cantidad} + 'x ' + ${d.producto.nombre}">1x Item</span>
+                            </div>
+                        </td>
+                        <td><span class="text-success fw-bold" th:text="'$' + ${venta.total}">$0.00</span></td>
+                        <td class="text-center pe-4">
+                            <a class="btn btn-sm-icon" th:href="@{/pos/ticket/{id}(id=${venta.id})}"
+                               th:title="'Ver detalle de venta #' + ${venta.id}">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(ventas)}">
+                        <td colspan="6" class="text-center py-5 text-muted">No hay registros de ventas aún.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+</body>
+</html>

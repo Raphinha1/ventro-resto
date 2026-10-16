@@ -1,0 +1,674 @@
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::main})}">
+<main class="main-content">
+    
+    <!-- FullCalendar 6 -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <style>
+        :root {
+            --fc-border-color: rgba(255,255,255,0.08);
+            --fc-today-bg-color: rgba(42,182,161,0.05);
+            --fc-page-bg-color: transparent;
+            --color-pendiente:   #f59e0b;
+            --color-confirmada:  #10b981;
+            --color-en-curso:    #3b82f6;
+            --color-cancelada:   #ef4444;
+        }
+        .main-content { padding: 2rem 2.5rem; }
+
+        /* ── Calendario Glass ── */
+        .calendar-container {
+            background: rgba(26,29,46,0.6);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 1.25rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            min-height: 450px;
+        }
+        #calendar { min-height: 400px; }
+        .fc { font-family: 'Inter', sans-serif; --fc-small-font-size: .85em; }
+        .fc .fc-toolbar-title { font-weight: 800; font-size: 1.5rem; color: #fff; }
+        .fc .fc-button-primary {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff;
+            border-radius: 12px; font-weight: 600; text-transform: capitalize; padding: .5rem 1rem;
+        }
+        .fc .fc-button-primary:hover  { background: var(--primary); border-color: var(--primary); }
+        .fc .fc-button-active         { background: var(--primary) !important; border-color: var(--primary) !important; }
+        .fc .fc-col-header-cell { padding: 12px 0; background: rgba(255,255,255,0.02); font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: .75rem; letter-spacing: .05em; }
+        .fc-theme-standard td, .fc-theme-standard th { border: 1px solid var(--fc-border-color); }
+        .fc-daygrid-day-number { font-weight: 600; padding: 10px !important; color: var(--text-muted); }
+        .fc-day-today .fc-daygrid-day-number { color: var(--primary); font-size: 1.1rem; }
+
+        /* ── Colores de eventos por estado (fuerzan sobre FullCalendar) ── */
+        .fc-event { border-radius: 8px !important; border: none !important; padding: 4px 8px; font-weight: 600; font-size: .8rem; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: transform .15s; cursor: pointer; }
+        .fc-event:hover { transform: scale(1.02); filter: brightness(1.12); }
+        .ev-pendiente  { background-color: var(--color-pendiente)  !important; border-left: 3px solid #d97706 !important; color: #fff !important; }
+        .ev-confirmada { background-color: var(--color-confirmada) !important; border-left: 3px solid #059669 !important; color: #fff !important; }
+        .ev-en-curso   { background-color: var(--color-en-curso)   !important; border-left: 3px solid #2563eb !important; color: #fff !important; }
+        .ev-cancelada  { background-color: var(--color-cancelada)  !important; border-left: 3px solid #dc2626 !important; color: #fff !important; opacity: .7; }
+
+        /* ── Leyenda ── */
+        .legend-pill { display:inline-flex; align-items:center; gap:.5rem; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:20px; padding:.35rem .85rem; font-size:.78rem; color:var(--text-muted); }
+        .legend-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+        /* ── Lista de reservas ── */
+        .reserva-row { background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:14px; padding:.85rem 1.2rem; display:flex; align-items:center; gap:1rem; transition: background .15s; }
+        .reserva-row:hover { background:rgba(255,255,255,0.05); }
+        .badge-estado { font-size:.68rem; font-weight:700; letter-spacing:.06em; padding:.25rem .7rem; border-radius:20px; text-transform:uppercase; white-space:nowrap; }
+        .badge-pendiente  { background:rgba(245,158,11,.15); color:#f59e0b; border:1px solid rgba(245,158,11,.25); }
+        .badge-confirmada { background:rgba(16,185,129,.15);  color:#10b981; border:1px solid rgba(16,185,129,.25); }
+        .badge-en-curso   { background:rgba(59,130,246,.15);  color:#60a5fa; border:1px solid rgba(59,130,246,.25); }
+        .badge-cancelada  { background:rgba(239,68,68,.1);    color:#f87171; border:1px solid rgba(239,68,68,.2); }
+
+        /* Stats bar */
+        .reserva-stats { display:flex; gap:1.5rem; margin-bottom:2rem; }
+        .stat-mini { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:16px; padding:1rem 1.5rem; display:flex; align-items:center; gap:1rem; }
+        .stat-mini .icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+
+        /* Botones de acción prominentes */
+        .mesa-btn-accion {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.35rem 0.75rem;
+            border-radius: 10px;
+            border: 1px solid;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .accion-editar  { background: rgba(78,149,255,0.1);  color: #4e95ff; border-color: rgba(78,149,255,0.3); }
+        .accion-editar:hover  { background: rgba(78,149,255,0.25); color: #4e95ff; }
+        .accion-eliminar { background: rgba(239,68,68,0.1); color: #f87171; border-color: rgba(239,68,68,0.25); }
+        .accion-eliminar:hover { background: rgba(239,68,68,0.25); color: #f87171; }
+
+        /* Reservas pasadas */
+        .reserva-vencida {
+            opacity: 0.6;
+            filter: grayscale(0.5);
+            border-style: dashed !important;
+        }
+        
+        .linked-field .form-control {
+            background: rgba(42,182,161,0.05) !important;
+            border-color: rgba(42,182,161,0.2) !important;
+            color: var(--primary) !important;
+            font-weight: 600;
+        }
+        .linked-info {
+            font-size: 0.65rem;
+            color: var(--primary);
+            font-weight: 700;
+            margin-top: 0.35rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+    </style>
+
+    <!-- Alertas Flash -->
+    <div th:if="${success}" class="alerta-flash alerta-exito d-flex align-items-center gap-2">
+        <i class="bi bi-check-circle-fill"></i> <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="alerta-flash alerta-error d-flex align-items-center gap-2">
+        <i class="bi bi-exclamation-triangle-fill"></i> <span th:text="${error}"></span>
+    </div>
+
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-0 fw-800" style="color:#fff; font-size: 1.4rem;">📅 Calendario de Reservas</h1>
+            <p class="text-muted mb-0 small">Gestión visual de turnos y disponibilidad</p>
+        </div>
+        <div class="d-flex gap-3 align-items-center">
+            <div class="reserva-stats d-none d-md-flex mb-0">
+                <div class="stat-mini py-2 px-3">
+                    <div class="icon" style="background:rgba(42,182,161,0.15); color:var(--primary); width:32px; height:32px; font-size:1rem;"><i class="bi bi-calendar-event"></i></div>
+                    <div><div class="fw-800 text-white" th:text="${reservas.size()}" style="font-size:1rem;">0</div><div class="text-muted" style="font-size:0.65rem;">Total</div></div>
+                </div>
+            </div>
+            <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalNuevaReserva">
+                <i class="bi bi-plus-lg me-2"></i>Nueva Reserva
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Columna Izquierda: Calendario -->
+        <div class="col-lg-8">
+            <div class="calendar-container">
+                <div id="calendar"></div>
+            </div>
+            
+            <!-- Leyenda de estados (debajo del calendario) -->
+            <div class="mt-3 d-flex gap-2 flex-wrap">
+                <span class="legend-pill" style="font-size: 0.7rem;"><span class="legend-dot" style="background:var(--color-pendiente);"></span> Pendiente</span>
+                <span class="legend-pill" style="font-size: 0.7rem;"><span class="legend-dot" style="background:var(--color-confirmada);"></span> Confirmada</span>
+                <span class="legend-pill" style="font-size: 0.7rem;"><span class="legend-dot" style="background:var(--color-en-curso);"></span> En Curso</span>
+                <span class="legend-pill" style="font-size: 0.7rem;"><span class="legend-dot" style="background:var(--color-cancelada);"></span> Cancelada</span>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Lista de reservas -->
+        <div class="col-lg-4">
+            <div class="card-custom h-100 d-flex flex-column" style="padding: 1.5rem; max-height: 550px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="section-title mb-0" style="font-size: 0.8rem;"><i class="bi bi-list-ul"></i> Reservas</div>
+                    <select id="filtroEstado" class="form-select form-select-sm" style="width:auto; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:#fff; border-radius:10px; font-size: 0.7rem;" onchange="filtrarReservas()">
+                        <option value="">Todos</option>
+                        <option value="PENDIENTE">Pte</option>
+                        <option value="CONFIRMADA">Conf</option>
+                        <option value="EN_CURSO">Curso</option>
+                        <option value="CANCELADA">Canc</option>
+                    </select>
+                </div>
+
+                <div class="flex-grow-1 overflow-y-auto pe-2" id="listaReservas" style="scrollbar-width: thin; scrollbar-color: var(--primary) transparent;">
+                    <div th:if="${reservas.isEmpty()}" class="text-center py-4" style="color:var(--text-muted); font-size:.8rem;">No hay registros.</div>
+                <div th:each="r : ${reservas}" 
+                     class="reserva-row mb-2" 
+                     th:data-estado="${r.estado}"
+                     th:classappend="${r.fechaHora != null and r.fechaHora.isBefore(T(java.time.LocalDateTime).now()) ? 'reserva-vencida' : ''}"
+                     style="padding: 0.6rem 0.8rem; gap: 0.75rem;">
+                    <!-- Fecha/hora -->
+                    <div style="min-width:50px; text-align:center;">
+                        <div style="font-size:1.1rem; font-weight:800; color:#fff; line-height:1;" th:text="${#temporals.format(r.fechaHora,'dd')}">01</div>
+                        <div style="font-size:.65rem; text-transform:uppercase; color:var(--text-muted);" th:text="${#temporals.format(r.fechaHora,'MMM')}">Ene</div>
+                        <div style="font-size:.7rem; font-weight:700; color:var(--primary);" th:text="${#temporals.format(r.fechaHora,'HH:mm')}">00:00</div>
+                    </div>
+                    <!-- Divider -->
+                    <div style="width:1px; height:30px; background:var(--border);"></div>
+                    <!-- Info -->
+                    <div class="flex-grow-1">
+                        <div style="font-weight:700; color:#fff; font-size:.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" th:text="${r.nombreMostrar}">Cliente</div>
+                        <div style="font-size:.65rem; color:var(--text-muted);">
+                            <i class="bi bi-people-fill"></i> <span th:text="${r.numeroPersonas}">2</span> | 
+                            <span th:if="${r.mesa != null}">M<span th:text="${r.mesa.numero}">1</span></span>
+                            <span th:if="${r.fechaHora != null and r.fechaHora.isBefore(T(java.time.LocalDateTime).now())}" class="badge bg-danger ms-1" style="font-size: 0.5rem; padding: 0.15rem 0.35rem;">VENCIDA</span>
+                        </div>
+                    </div>
+                    <!-- Acciones: Estado, Editar, Borrar -->
+                    <div class="d-flex flex-column gap-1" sec:authorize="hasAnyRole('ADMIN','GERENTE','SUPER_ADMIN')">
+                        <!-- Dropdown de Estado -->
+                        <div class="dropdown">
+                            <button class="btn-sm-icon" data-bs-toggle="dropdown" title="Estado" style="width:24px; height:24px; font-size:0.7rem; border-color: rgba(255,255,255,0.15);">
+                                <i class="bi bi-check2-circle"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="background: #1a1d2e; border: 1px solid var(--border); border-radius: 12px; min-width: 140px; padding: 0.5rem;">
+                                <li th:if="${r.estado == 'PENDIENTE'}"><form th:action="@{/reservas/{id}/estado(id=${r.id})}" method="post">
+                                    <input type="hidden" name="estado" value="CONFIRMADA">
+                                    <button type="submit" class="dropdown-item py-2" style="color:#10b981; font-size: 0.8rem; border-radius: 8px;"><i class="bi bi-check-circle-fill me-2"></i>Confirmar</button>
+                                </form></li>
+                                <li th:if="${r.estado == 'CONFIRMADA'}"><form th:action="@{/reservas/{id}/estado(id=${r.id})}" method="post">
+                                    <input type="hidden" name="estado" value="EN_CURSO">
+                                    <button type="submit" class="dropdown-item py-2" style="color:#60a5fa; font-size: 0.8rem; border-radius: 8px;"><i class="bi bi-play-circle-fill me-2"></i>En Curso</button>
+                                </form></li>
+                                <li th:if="${r.estado == 'CONFIRMADA'}"><form th:action="@{/reservas/{id}/estado(id=${r.id})}" method="post">
+                                    <input type="hidden" name="estado" value="NO_SHOW">
+                                    <button type="submit" class="dropdown-item py-2" style="color:#f59e0b; font-size: 0.8rem; border-radius: 8px;"><i class="bi bi-person-x-fill me-2"></i>No Show</button>
+                                </form></li>
+                                <li th:if="${r.estado == 'PENDIENTE' or r.estado == 'CONFIRMADA' or r.estado == 'EN_CURSO'}"><form th:action="@{/reservas/{id}/estado(id=${r.id})}" method="post">
+                                    <input type="hidden" name="estado" value="CANCELADA">
+                                    <button type="submit" class="dropdown-item py-2" style="color:#f87171; font-size: 0.8rem; border-radius: 8px;"><i class="bi bi-x-circle-fill me-2"></i>Cancelar</button>
+                                </form></li>
+                                <li th:if="${r.estado == 'EN_CURSO'}"><form th:action="@{/reservas/{id}/estado(id=${r.id})}" method="post">
+                                    <input type="hidden" name="estado" value="COMPLETADA">
+                                    <button type="submit" class="dropdown-item py-2" style="color:#10b981; font-size: 0.8rem; border-radius: 8px;"><i class="bi bi-check-circle-fill me-2"></i>Finalizar</button>
+                                </form></li>
+                            </ul>
+                        </div>
+                        
+                        <button type="button" class="btn-sm-icon editar" style="width:24px; height:24px; font-size:0.7rem;"
+                                th:data-id="${r.id}" onclick="abrirEditarReserva(this)" title="Editar">
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
+                        <button type="button" class="btn-sm-icon eliminar" style="width:24px; height:24px; font-size:0.7rem;"
+                                th:data-id="${r.id}" onclick="confirmarEliminarReserva(this)" title="Eliminar">
+                            <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario oculto para eliminar reserva -->
+    <form id="formEliminarReserva" method="post" style="display:none;">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+    </form>
+
+    <!-- Modal Confirmar Eliminación Reserva -->
+    <div class="modal fade" id="modalConfirmarEliminarReserva" tabindex="-1" aria-hidden="true" style="backdrop-filter:blur(8px);">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:390px;">
+            <div class="modal-content" style="background:#1a1d2e; border:1px solid rgba(239,68,68,0.3); border-radius:28px; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+                <div class="modal-body p-4 text-center">
+                    <div class="mb-3" style="width:64px;height:64px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:20px;display:flex;align-items:center;justify-content:center;color:#ef4444;font-size:2rem;margin:0 auto;">
+                        <i class="bi bi-calendar-x-fill"></i>
+                    </div>
+                    <h4 class="fw-bold text-white mb-2">¿Eliminar Reserva?</h4>
+                    <p class="text-muted px-2" style="font-size:.9rem;">Esta acción es irreversible. Se eliminará la reserva del sistema permanentemente.</p>
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="button" class="btn w-100 py-2" data-bs-dismiss="modal"
+                                style="background:rgba(255,255,255,0.05);color:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:14px;font-weight:600;">
+                            Cancelar
+                        </button>
+                        <button type="button" id="btnConfirmarEliminarReserva" class="btn w-100 py-2"
+                                style="background:#ef4444;color:#fff;border:none;border-radius:14px;font-weight:700;box-shadow:0 4px 12px rgba(239,68,68,0.3);">
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Reserva -->
+    <div class="modal fade" id="modalEditarReserva" tabindex="-1" style="backdrop-filter:blur(5px);">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="background:var(--card-bg); border:1px solid var(--border); border-radius:24px; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+                <div class="modal-header border-bottom-0 pb-0 px-4 pt-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:42px;height:42px;background:rgba(78,149,255,0.12);border:1px solid rgba(78,149,255,0.2);border-radius:13px;display:flex;align-items:center;justify-content:center;color:#4e95ff;font-size:1.2rem;">
+                            <i class="bi bi-pencil-fill"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Editar Reserva</h5>
+                            <div style="font-size:.78rem;color:var(--text-muted);">Modifica los datos de la reserva</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white opacity-50 ms-auto" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="formEditarReserva" th:action="@{/reservas/guardar}" method="post">
+                    <input type="hidden" id="editId" name="id">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <div class="modal-body px-4 py-4">
+                        <div class="row g-4">
+                            <div class="col-md-12">
+                                <label class="form-label-custom">Vincular con Cliente CRM (Opcional)</label>
+                                <select id="editCliente" name="cliente.id" class="form-select" onchange="toggleManualFields('edit')">
+                                    <option value="">-- Entrada Manual (No registrado) --</option>
+                                    <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nombre} + ' (' + ${c.telefono} + ')'"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="divEditNombre">
+                                <label class="form-label-custom">Nombre del Cliente <span class="text-danger">*</span></label>
+                                <input type="text" id="editNombre" name="nombreCliente" class="form-control" placeholder="Ej. Ana Lilia Gómez">
+                                <div class="linked-info d-none" id="infoEditNombre"><i class="bi bi-link-45deg"></i> Vinculado al CRM</div>
+                            </div>
+                            <div class="col-md-6" id="divEditTelefono">
+                                <label class="form-label-custom">Teléfono Contacto</label>
+                                <input type="text" id="editTelefono" name="telefonoCliente" class="form-control" placeholder="10 dígitos">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Fecha y Hora <span class="text-danger">*</span></label>
+                                <input type="datetime-local" id="editFechaHora" name="fechaHora" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Número de Pax <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text border-0" style="background:rgba(255,255,255,0.05);color:var(--text-muted);"><i class="bi bi-people-fill"></i></span>
+                                    <input type="number" id="editPersonas" name="numeroPersonas" class="form-control border-start-0" min="1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Mesa <span class="text-danger">*</span></label>
+                                <select id="editMesa" name="mesa.id" class="form-select" required>
+                                    <option value="" disabled>-- Selecciona Mesa --</option>
+                                    <option th:each="m : ${mesas}" th:value="${m.id}" th:text="'Mesa ' + ${m.numero} + ' (Cap: ' + ${m.capacidad} + ')'" ></option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Estado</label>
+                                <select id="editEstado" name="estado" class="form-select">
+                                    <option value="PENDIENTE">Pendiente</option>
+                                    <option value="CONFIRMADA">Confirmada</option>
+                                    <option value="EN_CURSO">En Curso</option>
+                                    <option value="COMPLETADA">Completada</option>
+                                    <option value="CANCELADA">Cancelada</option>
+                                    <option value="NO_SHOW">No Show</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Origen</label>
+                                <select id="editOrigen" name="origen" class="form-select">
+                                    <option value="TELEFONO">Teléfono</option>
+                                    <option value="WEB">Web</option>
+                                    <option value="APP">App Móvil</option>
+                                    <option value="PRESENCIAL">Presencial</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label-custom">Notas Especiales</label>
+                                <input type="text" id="editNotas" name="notas" class="form-control" placeholder="Ej. Alergias, cumpleaños...">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 px-4 pb-4 pt-0 d-flex gap-2">
+                        <button type="button" class="btn-form-cancel" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i> Cancelar</button>
+                        <button type="submit" class="btn-form-submit flex-grow-1"><i class="bi bi-floppy-fill"></i> Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nueva Reserva -->
+    <div class="modal fade" id="modalNuevaReserva" tabindex="-1" style="backdrop-filter: blur(5px);">
+
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="background:var(--card-bg); border:1px solid var(--border); border-radius:24px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+                <div class="modal-header border-bottom-0 pb-0 px-4 pt-4">
+                    <h5 class="modal-title fw-bold" style="font-size:1.3rem;"><i class="bi bi-calendar-plus text-primary me-2"></i>Nueva Reserva</h5>
+                    <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form th:action="@{/reservas/guardar}" method="post" th:object="${reserva}">
+                    <div class="modal-body px-4 py-4">
+                        
+                        <div class="row g-4">
+                            <!-- Vincular Cliente CRM -->
+                            <div class="col-md-12">
+                                <label class="form-label-custom">Vincular con Cliente CRM (Opcional)</label>
+                                <select class="form-select" th:field="*{cliente.id}" id="newCliente" onchange="toggleManualFields('new')">
+                                    <option value="">-- Entrada Manual (No registrado) --</option>
+                                    <option th:each="c : ${clientes}" th:value="${c.id}" th:text="${c.nombre} + ' (' + ${c.telefono} + ')'"></option>
+                                </select>
+                            </div>
+
+                            <!-- Datos del Cliente (No registrado) -->
+                            <div class="col-md-6" id="divNewNombre">
+                                <label class="form-label-custom">Nombre del Cliente <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" th:field="*{nombreCliente}" placeholder="Ej. Ana Lilia Gómez" id="inputNewNombre">
+                                <div class="linked-info d-none" id="infoNewNombre"><i class="bi bi-link-45deg"></i> Vinculado al CRM</div>
+                            </div>
+                            <div class="col-md-6" id="divNewTelefono">
+                                <label class="form-label-custom">Teléfono Contacto <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" th:field="*{telefonoCliente}" placeholder="10 dígitos" id="inputNewTelefono">
+                            </div>
+                            
+                            <hr class="my-4" style="border-color:var(--border);">
+
+                            <!-- Datos de la Reserva -->
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Fecha y Hora <span class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" th:field="*{fechaHora}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Número de Pax <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text border-0" style="background:rgba(255,255,255,0.05); color:var(--text-muted)"><i class="bi bi-people-fill"></i></span>
+                                    <input type="number" class="form-control border-start-0" th:field="*{numeroPersonas}" min="1" required value="2">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label-custom">Mesa <span class="text-danger">*</span></label>
+                                <select class="form-select" th:field="*{mesa.id}" required>
+                                    <option value="" disabled selected>-- Selecciona Mesa --</option>
+                                    <option th:each="m : ${mesas}" th:value="${m.id}" th:text="'Mesa ' + ${m.numero} + ' (Cap: ' + ${m.capacidad} + ')'"></option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Origen</label>
+                                <select class="form-select" th:field="*{origen}">
+                                    <option value="TELEFONO">Teléfono</option>
+                                    <option value="WEB">Web</option>
+                                    <option value="APP">App Móvil</option>
+                                    <option value="PRESENCIAL">Presencial</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">Notas Especiales</label>
+                                <input type="text" class="form-control" th:field="*{notas}" placeholder="Ej. Alergias, cumpleaños...">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 px-4 pb-4 pt-0">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 ms-auto border-0" style="color:var(--text-muted);" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary-custom rounded-pill px-4"><i class="bi bi-check-lg me-1"></i> Crear Reserva</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-abrir modal si viene mesa preseleccionada
+            const preselectedMesaId = [[${mesaIdPreselected}]];
+            if (preselectedMesaId) {
+                const selectMesa = document.getElementById('mesa.id');
+                if (selectMesa) selectMesa.value = preselectedMesaId;
+                new bootstrap.Modal(document.getElementById('modalNuevaReserva')).show();
+            }
+
+            const calendarEl = document.getElementById('calendar');
+            
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                buttonText: {
+                    today: 'Hoy',
+                    month: 'Mes',
+                    week: 'Semana',
+                    day: 'Día'
+                },
+                editable: [[${#authorization.expression("hasAnyRole('ADMIN','GERENTE','SUPER_ADMIN')")}]],
+                selectable: true,
+                events: '/reservas/eventos',
+                
+                loading: function(isLoading) {
+                    if (isLoading) {
+                        console.log("Cargando eventos...");
+                    }
+                },
+                
+                eventSourceFailure: function(error) {
+                    console.error("Error cargando eventos:", error);
+                    alert("No se pudieron cargar las reservas. Verifique su conexión.");
+                },
+                
+                // Al mover un evento (Drag & Drop)
+                eventDrop: function(info) {
+                    actualizarHorario(info.event);
+                },
+                
+                // Al redimensionar (si permitimos duración variable)
+                eventResize: function(info) {
+                    actualizarHorario(info.event);
+                },
+                
+                // Al hacer clic en un evento
+                eventClick: function(info) {
+                    const props = info.event.extendedProps;
+                    document.getElementById('detalle-titulo').textContent  = info.event.title;
+                    document.getElementById('detalle-mesa').textContent    = props.mesa || 'Sin asignar';
+                    document.getElementById('detalle-estado').textContent  = props.estado || '-';
+                    document.getElementById('detalle-personas').textContent = props.personas || '-';
+                    const estadoCls = 'badge-estado badge-' + (props.estado || '').toLowerCase().replace('_','-');
+                    document.getElementById('detalle-estado').className = estadoCls;
+                    new bootstrap.Modal(document.getElementById('modalDetalleReserva')).show();
+                },
+                
+                // Personalización de renderizado + clase CSS por estado
+                eventClassNames: function(arg) {
+                    const estado = (arg.event.extendedProps.estado || '').toLowerCase().replace('_','-');
+                    return ['ev-' + estado];
+                },
+                eventContent: function(arg) {
+                    let el = document.createElement('div');
+                    el.style.cssText = 'padding:2px 0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;';
+                    const time = document.createElement('b');
+                    time.style.opacity = '.85';
+                    time.textContent = arg.timeText;
+                    el.append(time, document.createTextNode(' ' + arg.event.title));
+                    return { domNodes: [el] };
+                }
+            });
+            
+            calendar.render();
+
+            function actualizarHorario(event) {
+                const formData = new FormData();
+                formData.append('id', event.id);
+                formData.append('nuevaFecha', event.start.toISOString());
+
+                fetch('/reservas/actualizar-horario', {
+                    method: 'POST',
+                    body: new URLSearchParams(formData),
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]')?.value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'error') {
+                        alert('Error al actualizar: ' + data.message);
+                        location.reload();
+                    }
+                });
+            }
+        });
+        /*]]>*/
+    </script>
+
+    <script>
+        /* ── Filtro de estado ── */
+        function filtrarReservas() {
+            const estado = document.getElementById('filtroEstado').value.toUpperCase();
+            document.querySelectorAll('#listaReservas .reserva-row').forEach(row => {
+                const rowEstado = row.getAttribute('data-estado') || '';
+                row.style.display = (!estado || rowEstado === estado) ? '' : 'none';
+            });
+        }
+
+        /* ── Editar Reserva (AJAX) ── */
+        function abrirEditarReserva(btn) {
+            const id = btn.getAttribute('data-id');
+            fetch('/reservas/' + id + '/editar')
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('editId').value            = d.id;
+                    document.getElementById('editNombre').value        = d.nombreCliente  || '';
+                    document.getElementById('editTelefono').value      = d.telefonoCliente || '';
+                    document.getElementById('editPersonas').value      = d.numeroPersonas  || 1;
+                    document.getElementById('editMesa').value          = d.mesaId != null ? d.mesaId : '';
+                    document.getElementById('editNotas').value         = d.notas          || '';
+                    // fechaHora: "2025-05-10T14:30" format for datetime-local
+                    document.getElementById('editFechaHora').value     = d.fechaHora ? d.fechaHora.substring(0, 16) : '';
+                    // Estado
+                    const selEstado = document.getElementById('editEstado');
+                    selEstado.value = d.estado || 'PENDIENTE';
+                    // Origen
+                    const selOrigen = document.getElementById('editOrigen');
+                    selOrigen.value = d.origen || 'TELEFONO';
+                    // Cliente
+                    const selCliente = document.getElementById('editCliente');
+                    selCliente.value = d.clienteId != null ? d.clienteId : '';
+                    toggleManualFields('edit');
+
+                    new bootstrap.Modal(document.getElementById('modalEditarReserva')).show();
+                })
+                .catch(() => alert('No se pudo cargar la reserva.'));
+        }
+
+        /* ── Toggle campos manuales ── */
+        function toggleManualFields(prefix) {
+            const isNew = prefix === 'new';
+            const select = document.getElementById(isNew ? 'newCliente' : 'editCliente');
+            const hasCliente = select.value !== '';
+            
+            const divNombre = document.getElementById(isNew ? 'divNewNombre' : 'divEditNombre');
+            const divTelefono = document.getElementById(isNew ? 'divNewTelefono' : 'divEditTelefono');
+            
+            const inputNombre = isNew ? document.getElementById('inputNewNombre') : document.getElementById('editNombre');
+            const inputTelefono = isNew ? document.getElementById('inputNewTelefono') : document.getElementById('editTelefono');
+            
+            const infoNombre = document.getElementById(isNew ? 'infoNewNombre' : 'infoEditNombre');
+
+            if (hasCliente) {
+                divNombre.classList.add('linked-field');
+                divTelefono.classList.add('linked-field');
+                infoNombre.classList.remove('d-none');
+                
+                inputNombre.required = false;
+                inputTelefono.required = false;
+                inputNombre.readOnly = true;
+                inputTelefono.readOnly = true;
+            } else {
+                divNombre.classList.remove('linked-field');
+                divTelefono.classList.remove('linked-field');
+                infoNombre.classList.add('d-none');
+                
+                inputNombre.required = true;
+                inputTelefono.required = true;
+                inputNombre.readOnly = false;
+                inputTelefono.readOnly = false;
+            }
+        }
+
+        /* ── Eliminar Reserva (modal de confirmación) ── */
+        let reservaIdAEliminar = null;
+        function confirmarEliminarReserva(btn) {
+            reservaIdAEliminar = btn.getAttribute('data-id');
+            new bootstrap.Modal(document.getElementById('modalConfirmarEliminarReserva')).show();
+        }
+
+        document.getElementById('btnConfirmarEliminarReserva').addEventListener('click', function () {
+            if (reservaIdAEliminar) {
+                const form = document.getElementById('formEliminarReserva');
+                form.action = '/reservas/' + reservaIdAEliminar + '/eliminar';
+                form.submit();
+            }
+        });
+    </script>
+
+<!-- Modal Detalle de Reserva (reemplaza alert) -->
+<div class="modal fade" id="modalDetalleReserva" tabindex="-1" aria-hidden="true" style="backdrop-filter:blur(8px);">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:380px;">
+        <div class="modal-content" style="background:#1a1d2e; border:1px solid rgba(255,255,255,0.09); border-radius:28px; box-shadow:0 25px 50px rgba(0,0,0,0.5);">
+            <div class="modal-body p-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div style="width:44px;height:44px;background:rgba(42,182,161,0.12);border:1px solid rgba(42,182,161,0.2);border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.3rem;">
+                        <i class="bi bi-calendar-event-fill"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);">Detalle de Reserva</div>
+                        <div id="detalle-titulo" style="font-weight:800;color:#fff;font-size:1rem;"></div>
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:1rem;" class="d-flex flex-column gap-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span style="font-size:.78rem;color:var(--text-muted);"><i class="bi bi-grid-fill me-2"></i>Mesa</span>
+                        <span id="detalle-mesa" style="font-weight:600;color:#fff;font-size:.85rem;"></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span style="font-size:.78rem;color:var(--text-muted);"><i class="bi bi-people-fill me-2"></i>Personas</span>
+                        <span id="detalle-personas" style="font-weight:600;color:#fff;font-size:.85rem;"></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span style="font-size:.78rem;color:var(--text-muted);"><i class="bi bi-circle-fill me-2" style="font-size:.5rem;vertical-align:middle;"></i>Estado</span>
+                        <span id="detalle-estado" class="badge-estado"></span>
+                    </div>
+                </div>
+                <button type="button" class="btn w-100 mt-3 py-2" data-bs-dismiss="modal"
+                        style="background:rgba(255,255,255,0.05);color:#fff;border:1px solid rgba(255,255,255,0.1);border-radius:14px;font-weight:600;">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<style>
+        :root {
+            --primary: #2AB6A1; --primary-dark: #1E8E7C; --secondary: #2D3561;
+            --sidebar-bg: #0F1117; --content-bg: #13161F; --card-bg: #1A1D2E;
+            --border: rgba(255,255,255,0.07); --text-main: #E8EAF0;
+            --text-muted: rgba(255,255,255,0.4); --sidebar-w: 260px;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--content-bg); color: var(--text-main); margin: 0; min-height: 100vh; }
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; overflow-y: auto; }
+        .sidebar-brand { padding: 1.75rem 1.5rem 1.25rem; border-bottom: 1px solid var(--border); }
+        .sidebar-brand h2 { font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0; }
+        .sidebar-brand span { font-size: 0.72rem; color: var(--text-muted); }
+        .nav-section-label { padding: 1.25rem 1.5rem 0.4rem; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+        .nav-link-custom { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 1.5rem; color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.9rem; font-weight: 500; border-left: 3px solid transparent; transition: all 0.18s; }
+        .nav-link-custom:hover { color: #fff; background: rgba(42,182,161,0.08); border-left-color: var(--primary); }
+        .nav-link-custom.activo { color: var(--primary); background: rgba(42,182,161,0.12); border-left-color: var(--primary); }
+        .nav-link-custom i { font-size: 1.05rem; width: 20px; }
+        .sidebar-user { margin-top: auto; padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; }
+        .user-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+        .user-name { font-size: 0.85rem; font-weight: 600; color: #fff; }
+        .user-role { font-size: 0.72rem; color: var(--text-muted); }
+        .btn-logout { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem; transition: color 0.15s; margin-left: auto; }
+        .btn-logout:hover { color: #ff7e7e; }
+        .main-content { margin-left: var(--sidebar-w); min-height: 100vh; padding: 2rem 2.5rem; }
+        .page-header h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
+        .card-custom { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; max-width: 650px; }
+        .form-control, .form-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 10px; padding: 0.7rem 1rem; }
+        .form-control:focus, .form-select:focus { background: rgba(255,255,255,0.08); border-color: var(--primary); color: #fff; box-shadow: 0 0 0 0.25rem rgba(42,182,161,0.2); }
+        .form-control:disabled, .form-control[readonly] { background-color: #13161F !important; color: #A2A8BA !important; border-color: rgba(255,255,255,0.1) !important; cursor: not-allowed; opacity: 1; -webkit-text-fill-color: #A2A8BA !important; }
+        .form-control::placeholder { color: rgba(255,255,255,0.5) !important; opacity: 1 !important; }
+        .btn-primary-custom { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border: none; color: #fff; border-radius: 10px; padding: 0.65rem 1.5rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; transition: all 0.2s; text-decoration: none;}
+        .btn-primary-custom:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(42,182,161,0.3); color: white;}
+        .btn-secondary-custom { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: #E8EAF0; border-radius: 10px; padding: 0.65rem 1.5rem; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;}
+        .btn-secondary-custom:hover { background: rgba(255,255,255,0.12); color: #fff; }
+        label { color: #A2A8BA; font-size: 0.72rem; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem; display: block; letter-spacing: 0.05em;}
+        option { background-color: #1A1D2E; color: #E8EAF0; }
+        .insumo-info-box { background: rgba(42,182,161,0.1) !important; border: 1px solid rgba(42,182,161,0.2) !important; color: #fff !important; border-radius: 12px; padding: 0.8rem 1.2rem; font-size: 0.95rem; display: flex; align-items: center; font-weight: 500; margin-bottom: 1.5rem; }
+        .insumo-info-box i { color: var(--primary) !important; font-size: 1.2rem; margin-right: 0.8rem; }
+    </style>
+<main class="main-content">
+    <div class="page-header mb-4">
+        <h1 th:text="${titulo}">Registrar Movimiento</h1>
+        <span style="color:var(--text-muted)">Entrada, salida o ajuste de stock para un insumo específico</span>
+    </div>
+
+    <div class="card-custom">
+        <form th:action="@{/movimientos/guardar}" th:object="${movimiento}" method="post">
+            <input type="hidden" th:field="*{insumo.id}">
+            
+            <div class="mb-4">
+                <label>Insumo Seleccionado</label>
+                <div class="insumo-info-box">
+                    <i class="bi bi-box-seam-fill"></i>
+                    <span th:text="${movimiento.insumo.nombre} + ' (Stock actual: ' + ${movimiento.insumo.stockActual} + ' ' + ${movimiento.insumo.unidadMedida} + ')'">Nombre del Insumo</span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <label>Tipo de Movimiento</label>
+                    <select th:field="*{tipoMovimiento}" class="form-select">
+                        <option value="ENTRADA">Entrada (Sumar stock)</option>
+                        <option value="SALIDA">Salida (Quitar stock)</option>
+                        <option value="AJUSTE">Ajuste (Corrección directa)</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <label>Cantidad</label>
+                    <input type="number" step="0.01" th:field="*{cantidad}" class="form-control" placeholder="0.00" required>
+                </div>
+            </div>
+
+            <div class="mb-5">
+                <label>Comentario / Justificación</label>
+                <textarea th:field="*{comentario}" class="form-control" rows="3" placeholder="Ej. Compra de mercancía, Merma por caducidad, Ajuste de auditoría..."></textarea>
+            </div>
+
+            <hr style="border-color: var(--border); margin: 1.5rem 0;">
+
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn-primary-custom" style="width: auto;">
+                    <i class="bi bi-arrow-left-right"></i>
+                    Procesar Movimiento
+                </button>
+                <a th:href="@{/insumos}" class="btn-secondary-custom">
+                    <i class="bi bi-x-lg"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</main>
+</body>
+</html>

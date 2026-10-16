@@ -1,0 +1,29 @@
+# Local secrets and per-machine configuration
+.env
+.env.*
+!.env.example
+
+# Build output, IDE state, logs and temporary files
+target/
+build/
+*.log
+*.tmp
+*.swp
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Runtime data must never be committed
+runtime/
+uploads/
+logs/
+backups/
+data/
+*.dump
+*.backup
+*.bak
+*.sqlite
+*.sqlite3
+*.db
+*.sql.gz

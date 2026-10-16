@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      POSTGRES_USER: ${DB_USER:?Set DB_USER in .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set a local-only DB_PASSWORD in .env}
+    volumes:
+      - ventro_local_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: "no"
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DB_URL: ${DB_URL:?Set DB_URL in .env}
+      DB_USER: ${DB_USER:?Set DB_USER in .env}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      PORT: ${PORT:-8080}
+      THYMELEAF_CACHE: ${THYMELEAF_CACHE:-false}
+      VENTRO_RESTAURANT_ID: ${VENTRO_RESTAURANT_ID:?Set VENTRO_RESTAURANT_ID in .env}
+      VENTRO_BRANCH_ID: ${VENTRO_BRANCH_ID:?Set VENTRO_BRANCH_ID in .env}
+      VENTRO_ATTENDANCE_PIN_PEPPER: ${VENTRO_ATTENDANCE_PIN_PEPPER:?Generate a local-only pepper}
+      VENTRO_BOOTSTRAP_ADMIN_USERNAME: ${VENTRO_BOOTSTRAP_ADMIN_USERNAME:-}
+      VENTRO_BOOTSTRAP_ADMIN_PASSWORD: ${VENTRO_BOOTSTRAP_ADMIN_PASSWORD:-}
+      VENTRO_INVENTORY_CURRENCY: ${VENTRO_INVENTORY_CURRENCY:-}
+      VENTRO_RESERVAS_VENTANA_BLOQUEO_MINUTOS: ${VENTRO_RESERVAS_VENTANA_BLOQUEO_MINUTOS:-30}
+      UPLOAD_DIR: /app/uploads/public
+      TZ: UTC
+    ports:
+      - "127.0.0.1:${PORT:-8080}:${PORT:-8080}"
+    volumes:
+      - ${UPLOADS_HOST_DIR:?Set a local relative UPLOADS_HOST_DIR in .env}:/app/uploads
+    restart: "no"
+
+volumes:
+  ventro_local_db:

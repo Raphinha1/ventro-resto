@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket Cocina #[[${venta.id}]]</title>
+    <style>
+        /* Estilos reset y básicos para impresión */
+        body { 
+            font-family: 'Courier New', Courier, monospace; 
+            width: 80mm; /* Tamaño estándar de ticketera */
+            margin: 0 auto; 
+            padding: 10px; 
+            color: #000; 
+            background: #fff;
+            line-height: 1.2; 
+        }
+        
+        .text-center { text-align: center; }
+        
+        /* Controles de UI (No se imprimen) */
+        .no-print {
+            padding: 15px;
+            text-align: center;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        .btn-action {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0 5px;
+            font-family: Arial, sans-serif;
+            transition: opacity 0.2s;
+        }
+        
+        .btn-orange { background: #2AB6A1; color: #fff; }
+        .btn-dark { background: #2D3561; color: #fff; }
+        .btn-action:hover { opacity: 0.9; }
+
+        /* Diseño del ticket web */
+        .ticket-content {
+            padding: 10px;
+            border: 1px dashed #ccc;
+        }
+
+        .header { 
+            border-bottom: 2px dashed #000; 
+            padding: 10px 0; 
+            margin-bottom: 15px; 
+        }
+        .header h1 { margin: 0; font-size: 24px; text-transform: uppercase; }
+        .header p { margin: 5px 0 0; font-size: 14px; }
+        
+        .order-info { font-size: 14px; margin-bottom: 15px; }
+        .order-info strong { font-size: 16px; display: block; margin-bottom: 5px; }
+        .order-info div { margin-bottom: 3px; }
+
+        .big-order-num {
+            font-size: 26px;
+            font-weight: 900;
+            text-align: center;
+            padding: 5px;
+            border: 2px solid #000;
+            margin-bottom: 10px;
+        }
+
+        .items-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .items-table th { border-bottom: 1px solid #000; text-align: left; padding: 5px 0; font-size: 14px; }
+        .items-table td { padding: 8px 0; vertical-align: top; border-bottom: 1px dotted #999; }
+        
+        .qty { font-size: 18px; font-weight: bold; text-align: left; width: 15%; }
+        .prod-name { font-size: 16px; font-weight: bold; text-transform: uppercase; }
+        .prod-note { font-size: 13px; font-style: italic; margin-top: 4px; display: block; }
+        
+        .footer { 
+            margin-top: 20px; 
+            border-top: 2px dashed #000; 
+            padding-top: 15px; 
+            text-align: center; 
+            font-size: 12px; 
+        }
+
+        /* Ocultar elementos en la impresora */
+        @media print {
+            .no-print { display: none !important; }
+            body { margin: 0; padding: 0; background: #fff; }
+            .ticket-content { border: none; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Controles que envuelven el ticket web para navegación (desaparecen al imprimir) -->
+    <div class="no-print">
+        <div style="font-family: Arial, sans-serif; font-size: 12px; color: #64748b; margin-bottom: 10px;">
+            Asegúrate de configurar la impresora a 80mm de ancho.
+        </div>
+        <button onclick="window.print()" class="btn-action btn-orange">
+            🖨️ IMPRIMIR A COCINA
+        </button>
+        <a th:href="@{/pos}" class="btn-action btn-dark">
+            ↩️ Volver al POS
+        </a>
+    </div>
+
+    <!-- Contenido del ticket de cocina -->
+    <div class="ticket-content">
+        <div class="header text-center">
+            <h1>-- COCINA --</h1>
+            <p th:text="${config != null ? config.nombreNegocio : 'VENTRO RESTO'}">VENTRO RESTO</p>
+        </div>
+
+        <div class="order-info">
+            <div class="big-order-num">
+                ORDEN #<span th:text="${venta.id}">001</span>
+            </div>
+            <div><strong>MESERO:</strong> <span th:text="${venta.usuario.username}">User</span></div>
+            <div><strong>HORA:</strong> <span th:text="${#temporals.format(venta.fecha, 'HH:mm:ss')}">00:00:00</span></div>
+            <div><strong>FECHA:</strong> <span th:text="${#temporals.format(venta.fecha, 'dd/MM/yyyy')}">01/01/2026</span></div>
+        </div>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>CANT</th>
+                    <th>DESCRIPCIÓN</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="det : ${venta.detalles}">
+                    <td class="qty" th:text="${det.cantidad}">1</td>
+                    <td>
+                        <span class="prod-name" th:text="${det.producto.nombre}">Platillo Name</span>
+                        <span class="prod-note" th:if="${det.notas != null and not #strings.isEmpty(det.notas)}">
+                            * Nota: <span th:text="${det.notas}">Instrucción</span>
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="footer">
+            <p>*** FIN DE COMANDA ***</p>
+        </div>
+    </div>
+
+    <script>
+        // Imprimir automáticamente (opcional según la preferencia de flujo, 
+        // muchos sistemas POS imprimen automáticamente al llegar a esta vista)
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

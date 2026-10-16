@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<main class="main-content receipt-page" id="presentation-app" th:data-insumo="${ingredient.id}">
+<link rel="stylesheet" th:href="@{/css/receipts.css}">
+<header class="page-header"><h1>Presentaciones de compra</h1><p th:text="${ingredient.nombre}"></p>
+    <a th:href="@{/inventario/recepciones/nueva}">Volver a recepción</a> · <a th:href="@{/insumos}">Inventario</a></header>
+<div id="presentation-message" role="status" aria-live="polite" tabindex="-1"></div>
+<p>Ingrediente, modo, unidades, familia y factor no se editan. Para otra regla, crea una nueva presentación.</p>
+<section aria-label="Presentaciones existentes">
+<article class="card-custom receipt-line" th:each="p : ${presentations}">
+    <p th:text="${p.modo + ' · ' + p.unidadCompra + ' → ' + p.unidadBase + (p.factor != null ? ' · factor ' + p.factor : ' · base medida') + ' · ' + p.estado}"></p>
+    <form data-rename th:data-id="${p.id}" class="receipt-toolbar">
+        <label th:for="${'name-'+p.id}">Nombre</label><input class="form-control" th:id="${'name-'+p.id}" name="nombre" th:value="${p.nombre}" required maxlength="150">
+        <button class="btn btn-outline-light" type="submit">Renombrar</button>
+    </form>
+    <button class="btn btn-outline-light" type="button" data-state th:data-id="${p.id}" th:data-state="${p.estado == 'ACTIVA' ? 'INACTIVA' : 'ACTIVA'}"
+            th:text="${p.estado == 'ACTIVA' ? 'Desactivar' : 'Activar'}"></button>
+</article>
+<p th:if="${#lists.isEmpty(presentations)}">No hay presentaciones para este ingrediente.</p>
+</section>
+<section class="card-custom receipt-line">
+<h2>Crear presentación</h2>
+<p th:if="${ingredient.estado_inventario_5a != 'ACTIVO_5A'}">Crear requiere un insumo ACTIVO_5A. Aquí no se activa el inventario.</p>
+<form id="presentation-create">
+<fieldset th:disabled="${ingredient.estado_inventario_5a != 'ACTIVO_5A'}" class="receipt-grid">
+    <div><label for="presentation-name">Nombre *</label><input id="presentation-name" name="nombre" class="form-control" required maxlength="150"></div>
+    <div><label for="purchase-unit">Unidad de compra *</label><input id="purchase-unit" name="unidadCompra" class="form-control" required maxlength="50"></div>
+    <div><label for="presentation-mode">Modo *</label><select id="presentation-mode" name="modo" class="form-select"><option value="FIJA">Fija</option><option value="VARIABLE">Variable</option></select></div>
+    <div id="factor-group"><label for="presentation-factor" th:text="${'Factor a ' + ingredient.unidad_base_codigo + ' *'}"></label><input id="presentation-factor" name="factor" class="form-control" inputmode="decimal" required aria-describedby="factor-help"><small id="factor-help">Positivo, hasta 12 decimales; conversión explícita.</small></div>
+    <button class="btn-primary-custom" type="submit">Crear presentación</button>
+</fieldset>
+</form>
+</section>
+<script th:src="@{/js/presentation-client.js}"></script>
+</main></body></html>

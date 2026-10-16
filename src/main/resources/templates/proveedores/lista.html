@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<main class="main-content">
+    <div class="page-header d-flex align-items-center justify-content-between">
+        <div>
+            <h1><i class="bi bi-truck me-2" style="color:var(--primary)"></i><span th:text="${titulo}">Gestión de Proveedores</span></h1>
+            <p style="color:var(--text-muted);font-size:.85rem;margin:0">Administra los proveedores de insumos del restaurante</p>
+        </div>
+        <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalProveedor" onclick="abrirModalNuevo()">
+            <i class="bi bi-plus-lg me-1"></i> Nuevo Proveedor
+        </button>
+    </div>
+
+    <div th:if="${mensajeExito}" class="alerta-exito"><i class="bi bi-check-circle-fill me-2"></i><span th:text="${mensajeExito}"></span></div>
+    <div th:if="${mensajeError}" class="alerta-error"><i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${mensajeError}"></span></div>
+
+    <div class="card-custom">
+        <div th:if="${#lists.isEmpty(proveedores)}" class="empty-state">
+            <div class="empty-icon">🚚</div>
+            <h5 style="color:rgba(255,255,255,.6)">No hay proveedores registrados</h5>
+            <p style="font-size:.85rem">Registra el primer proveedor usando el botón de arriba.</p>
+        </div>
+        <div th:unless="${#lists.isEmpty(proveedores)}">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <span style="font-size:.82rem;color:var(--text-muted)">Total: <strong th:text="${#lists.size(proveedores)}" style="color:#fff">0</strong> proveedores</span>
+            </div>
+            <div class="table-responsive">
+            <table class="table table-custom table-borderless">
+                <thead>
+                    <tr>
+                        <th class="d-none d-md-table-cell">#ID</th><th>Empresa</th><th class="d-none d-md-table-cell">Contacto</th><th>Teléfono</th><th class="d-none d-md-table-cell">Email</th><th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${proveedores}">
+                        <td class="d-none d-md-table-cell"><span th:text="${p.id}">1</span></td>
+                        <td><span th:text="${p.nombreEmpresa}">Empresa</span></td>
+                        <td class="d-none d-md-table-cell"><span th:text="${p.contactoNombre != null and !p.contactoNombre.isEmpty()} ? ${p.contactoNombre} : '—'">—</span></td>
+                        <td>
+                            <a th:if="${p.telefono != null and !p.telefono.isEmpty()}" th:href="'tel:' + ${p.telefono}" th:text="${p.telefono}" style="color:var(--text-main);text-decoration:none"></a>
+                            <span th:unless="${p.telefono != null and !p.telefono.isEmpty()}">—</span>
+                        </td>
+                        <td class="d-none d-md-table-cell">
+                            <a th:if="${p.email != null and !p.email.isEmpty()}" th:href="'mailto:' + ${p.email}" th:text="${p.email}" style="color:var(--text-main);text-decoration:none"></a>
+                            <span th:unless="${p.email != null and !p.email.isEmpty()}">—</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button type="button" class="btn-sm-icon editar" title="Editar proveedor"
+                                        th:data-id="${p.id}"
+                                        th:data-nombre="${p.nombreEmpresa}"
+                                        th:data-contacto="${p.contactoNombre}"
+                                        th:data-telefono="${p.telefono}"
+                                        th:data-email="${p.email}"
+                                        onclick="abrirModalEditar(this)">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                                <button type="button" class="btn-sm-icon eliminar" title="Eliminar proveedor"
+                                        th:data-id="${p.id}" th:data-nombre="${p.nombreEmpresa}"
+                                        onclick="abrirModalEliminar(this)">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+    .alerta-exito{background:rgba(25,135,84,0.2);color:#6ee7b4;border:none;border-radius:12px;padding:.85rem 1.25rem;margin-bottom:1.5rem}
+    .alerta-error{background:rgba(220,53,69,0.2);color:#ff9ca6;border:none;border-radius:12px;padding:.85rem 1.25rem;margin-bottom:1.5rem}
+    .btn-sm-icon{width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);font-size:0.9rem;transition:all 0.15s;cursor:pointer;background:transparent}
+    .btn-sm-icon.editar{background:rgba(78,149,255,0.1);color:#4e95ff;border-color:rgba(78,149,255,0.2)}
+    .btn-sm-icon.editar:hover{background:rgba(78,149,255,0.2);border-color:#4e95ff}
+    .btn-sm-icon.eliminar{background:rgba(255,126,126,0.1);color:#ff7e7e;border-color:rgba(255,126,126,0.2)}
+    .btn-sm-icon.eliminar:hover{background:rgba(255,126,126,0.2);border-color:#ff7e7e}
+</style>
+
+<!-- =========== MODAL CREAR / EDITAR PROVEEDOR =========== -->
+<div class="modal fade" id="modalProveedor" tabindex="-1" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:580px;">
+        <div class="modal-content" style="background:rgba(26,29,46,0.92);border:1px solid rgba(255,255,255,0.09);border-radius:28px;box-shadow:0 32px 64px rgba(0,0,0,0.55);">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:42px;height:42px;background:rgba(42,182,161,0.15);border:1px solid rgba(42,182,161,0.25);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.2rem;">
+                        <i class="bi bi-truck"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="modalProveedorTitulo">Nuevo Proveedor</h5>
+                        <div style="font-size:.78rem;color:var(--text-muted);">Datos de contacto y empresa</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white opacity-50 ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form th:action="@{/proveedores/guardar}" method="post">
+                <input type="hidden" id="proveedorId" name="id">
+                <div class="modal-body px-4 py-4">
+                    <div class="mb-3">
+                        <label class="form-label-custom">Nombre de la Empresa <span style="color:var(--primary)">*</span></label>
+                        <input type="text" id="provNombreEmpresa" name="nombreEmpresa" class="form-control" placeholder="Ej. Distribuidora La Cosecha S.A." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-custom">Nombre del Contacto</label>
+                        <input type="text" id="provContacto" name="contactoNombre" class="form-control" placeholder="Ej. Juan García">
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Teléfono</label>
+                            <input type="tel" id="provTelefono" name="telefono" class="form-control" placeholder="+52 55 1234 5678">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Correo Electrónico</label>
+                            <input type="email" id="provEmail" name="email" class="form-control" placeholder="proveedor@example.invalid">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0 d-flex gap-2">
+                    <button type="button" class="btn-form-cancel" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i> Cancelar</button>
+                    <button type="submit" class="btn-form-submit flex-grow-1">
+                        <i class="bi bi-floppy-fill"></i> <span id="btnProveedorLabel">Registrar Proveedor</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Eliminar -->
+<form id="formEliminar" method="post" th:action="@{/proveedores/eliminar/0}">
+    <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+</form>
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1A1D2E;border:1px solid rgba(255,255,255,0.1);border-radius:16px">
+            <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.08)">
+                <h5 class="modal-title" style="color:#fff"><i class="bi bi-exclamation-triangle-fill me-2" style="color:#ff7e7e"></i>Confirmar eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="color:rgba(255,255,255,0.7)">
+                ¿Eliminar al proveedor <strong id="nombreProveedor" style="color:#fff"></strong>?
+                <p class="mt-2 mb-0" style="font-size:.82rem;color:rgba(255,255,255,.4)">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid rgba(255,255,255,0.08)">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn" id="btnConfirmarEliminar"
+                        style="background:linear-gradient(135deg,#1E8E7C,#c23d16);color:#fff;border:none;border-radius:8px;padding:.5rem 1.2rem;font-weight:600">
+                    <i class="bi bi-trash3-fill me-1"></i>Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalNuevo() {
+        document.getElementById('modalProveedorTitulo').textContent = 'Nuevo Proveedor';
+        document.getElementById('btnProveedorLabel').textContent = 'Registrar Proveedor';
+        document.getElementById('proveedorId').value = '';
+        document.getElementById('provNombreEmpresa').value = '';
+        document.getElementById('provContacto').value = '';
+        document.getElementById('provTelefono').value = '';
+        document.getElementById('provEmail').value = '';
+    }
+    function abrirModalEditar(btn) {
+        document.getElementById('modalProveedorTitulo').textContent = 'Editar Proveedor';
+        document.getElementById('btnProveedorLabel').textContent = 'Guardar Cambios';
+        document.getElementById('proveedorId').value = btn.dataset.id;
+        document.getElementById('provNombreEmpresa').value = btn.dataset.nombre || '';
+        document.getElementById('provContacto').value = btn.dataset.contacto || '';
+        document.getElementById('provTelefono').value = btn.dataset.telefono || '';
+        document.getElementById('provEmail').value = btn.dataset.email || '';
+        new bootstrap.Modal(document.getElementById('modalProveedor')).show();
+    }
+    function abrirModalEliminar(btn) {
+        document.getElementById('nombreProveedor').textContent = btn.dataset.nombre;
+        document.getElementById('formEliminar').action = '/proveedores/eliminar/' + btn.dataset.id;
+        const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+        document.getElementById('btnConfirmarEliminar').onclick = () => document.getElementById('formEliminar').submit();
+        modal.show();
+    }
+</script>
+</body>
+</html>

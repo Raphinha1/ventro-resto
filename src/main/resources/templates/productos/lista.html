@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<style>
+        .page-header h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
+        .table-custom { --bs-table-bg: transparent; --bs-table-color: var(--text-main); color: var(--text-main); border-color: var(--border); }
+        .table-custom thead th { background: rgba(255,255,255,.04) !important; color: rgba(255,255,255,.5); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); }
+        .table-custom tbody tr { background: transparent !important; }
+        .table-custom tbody td { padding: 0.85rem 1rem; vertical-align: middle; border-bottom: 1px solid var(--border); background: transparent !important; color: var(--text-main); }
+        .btn-sm-icon{width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);text-decoration:none;font-size:.9rem;transition:all .15s}
+        .btn-sm-icon.editar{background:rgba(78,149,255,0.1);color:#4e95ff;border-color:rgba(78,149,255,0.2)}
+        .btn-sm-icon.editar:hover{background:rgba(78,149,255,0.2);color:#4e95ff;border-color:#4e95ff}
+        .btn-sm-icon.eliminar{background:rgba(255,126,126,0.1);color:#ff7e7e;border-color:rgba(255,126,126,0.2)}
+        .btn-sm-icon.eliminar:hover{background:rgba(255,126,126,0.2);color:#ff7e7e;border-color:#ff7e7e}
+        .btn-sm-icon.receta{background:rgba(245,158,11,0.1);color:#f59e0b;border-color:rgba(245,158,11,0.2)}
+        .btn-sm-icon.receta:hover{background:rgba(245,158,11,0.2);color:#f59e0b;border-color:#f59e0b}
+    </style>
+<main class="main-content">
+    <div class="d-flex justify-content-between align-items-center page-header">
+        <div>
+            <h1>🍕 Menú del Restaurante</h1>
+            <span style="color:var(--text-muted)">Catálogo de platillos y productos a la venta</span>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary border-0" style="background:rgba(255,255,255,0.05); color:#818cf8; border-radius:10px;" onclick="mostrarQRMenu()">
+                <i class="bi bi-qr-code-scan"></i> QR Menú
+            </button>
+            <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalProducto" onclick="abrirModalNuevo()">
+                <i class="bi bi-plus-lg"></i> Agregar Platillo
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal QR Menú -->
+    <div class="modal fade" id="modalQR" tabindex="-1">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content" style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title text-white fw-bold"><i class="bi bi-qr-code"></i> Menú Digital</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center pt-2 pb-4">
+                    <p class="text-muted small mb-3">Escanea este código para ver el menú en vivo.</p>
+                    <div style="background: white; padding: 15px; border-radius: 15px; display: inline-block;">
+                        <img id="qrImage" src="" alt="QR Code" style="width: 200px; height: 200px;">
+                    </div>
+                    <div class="mt-3">
+                        <a id="linkMenu" href="/menu" target="_blank" class="btn btn-sm btn-outline-secondary border-0 w-100" style="background:rgba(255,255,255,0.05); color:var(--text-main);">
+                            <i class="bi bi-box-arrow-up-right"></i> Abrir menú web
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function mostrarQRMenu() {
+            // Generar la URL base dinámica
+            const baseUrl = window.location.origin + '/menu';
+            document.getElementById('linkMenu').href = baseUrl;
+            // Usar api.qrserver.com para generar el QR al instante
+            document.getElementById('qrImage').src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(baseUrl);
+            new bootstrap.Modal(document.getElementById('modalQR')).show();
+        }
+    </script>
+
+    <div th:if="${mensajeExito}" class="alert alert-success" th:text="${mensajeExito}"></div>
+    <div th:if="${mensajeError}" class="alert alert-danger" th:text="${mensajeError}"></div>
+
+    <div class="card-custom">
+        <div class="table-responsive">
+        <table class="table table-custom">
+            <thead>
+            <tr>
+                <th class="d-none d-md-table-cell">ID</th>
+                <th>Nombre</th>
+                <th>Precio Venta</th>
+                <th>Recompensa (Da)</th>
+                <th>Precio en Puntos (Vale)</th>
+                <th class="d-none d-md-table-cell">Categoría</th>
+                <th class="d-none d-md-table-cell">Ingredientes Escandallo</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="producto : ${productos}">
+                <td class="d-none d-md-table-cell" th:text="${producto.id}">1</td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <img th:if="${producto.imagenUrl != null}" th:src="${producto.imagenUrl}" alt="Foto" style="width:36px; height:36px; object-fit:cover; border-radius:8px; border:1px solid rgba(255,255,255,0.1);">
+                        <div th:unless="${producto.imagenUrl != null}" style="width:36px; height:36px; border-radius:8px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); font-size:1rem; color:var(--text-muted);"><i class="bi bi-image"></i></div>
+                        <span th:text="${producto.nombre}">Platillo</span>
+                    </div>
+                </td>
+                <td th:text="'$' + ${producto.precioVenta}">$100.0</td>
+                <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;" th:text="'+' + ${producto.puntosOtorgados}">+0</span></td>
+                <td><span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #a78bfa;" th:text="${producto.puntosPrecio} + ' pts'">0 pts</span></td>
+                <td class="d-none d-md-table-cell" th:text="${producto.categoria != null ? producto.categoria.nombre : '—'}">Cat</td>
+                <td class="d-none d-md-table-cell">
+                    <span th:if="${producto.esReventa}"
+                          class="badge" style="background:rgba(99,102,241,0.2);color:#818cf8;">🏪 Reventa</span>
+                    <span th:unless="${producto.esReventa}"
+                          class="badge" style="background: rgba(245,158,11,0.2); color: #f59e0b;"
+                          th:text="${#lists.size(producto.ingredientes)} + ' insumo(s)'">0</span>
+                </td>
+                <td class="text-center d-flex gap-2 justify-content-center">
+                    <!-- Botón Receta: solo visible si NO es producto de reventa -->
+                    <button th:unless="${producto.esReventa}" type="button" class="btn-sm-icon receta" title="Ver / Editar Receta"
+                            th:data-url="@{/recetas/producto/{id}(id=${producto.id})}"
+                            onclick="abrirModalReceta(this.dataset.url)">
+                        <i class="bi bi-journal-plus"></i>
+                    </button>
+                    <button type="button" class="btn-sm-icon editar" title="Editar Platillo"
+                            th:data-id="${producto.id}"
+                            th:data-nombre="${producto.nombre}"
+                            th:data-precio="${producto.precioVenta}"
+                            th:data-categoria="${producto.categoria != null ? producto.categoria.id : ''}"
+                            th:data-descripcion="${producto.descripcion}"
+                            th:data-puntos="${producto.puntosOtorgados}"
+                            th:data-puntos-precio="${producto.puntosPrecio}"
+                            th:data-foto="${producto.imagenUrl}"
+                            th:data-es-reventa="${producto.esReventa}"
+                            th:data-insumo-reventa="${producto.insumoReventa != null ? producto.insumoReventa.id : ''}"
+                            onclick="abrirModalEditar(this)">
+                        <i class="bi bi-pencil-fill"></i>
+                    </button>
+                    <button type="button" class="btn-sm-icon eliminar"
+                            th:data-id="${producto.id}"
+                            th:data-nombre="${producto.nombre}"
+                            onclick="abrirModalEliminar(this)"
+                            title="Eliminar platillo">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(productos)}">
+                <td colspan="8" class="text-center text-muted py-4">No hay platillos registrados en el menú</td>
+            </tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+</main>
+
+<form id="formEliminar" method="post" th:action="@{/productos/eliminar/0}">
+</form>
+
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1A1D2E;border:1px solid rgba(255,255,255,0.1);border-radius:16px">
+            <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.08)">
+                <h5 class="modal-title" style="color:#fff"><i class="bi bi-exclamation-triangle-fill me-2" style="color:#ff7e7e"></i>Confirmar eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="color:rgba(255,255,255,0.7)">
+                ¿Estás seguro de eliminar el platillo <strong id="nombreProducto" style="color:#fff"></strong>?
+                <p class="mt-2 mb-0" style="font-size:.82rem;color:rgba(255,255,255,.4)">Se perderán todos los datos vinculados, incluyendo su receta.</p>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid rgba(255,255,255,0.08)">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn" id="btnConfirmarEliminar"
+                        style="background:linear-gradient(135deg,#1E8E7C,#c23d16);color:#fff;border:none;border-radius:8px;padding:.5rem 1.2rem;font-weight:600">
+                    <i class="bi bi-trash3-fill me-1"></i>Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalEliminar(btn) {
+        const id     = btn.dataset.id;
+        const nombre = btn.dataset.nombre;
+        document.getElementById('nombreProducto').textContent = nombre;
+        document.getElementById('formEliminar').action = '/productos/eliminar/' + id;
+        const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+        document.getElementById('btnConfirmarEliminar').onclick = function() {
+            document.getElementById('formEliminar').submit();
+        };
+        modal.show();
+    }
+</script>
+<!-- Modal: Crear / Editar Platillo -->
+<div class="modal fade" id="modalProducto" tabindex="-1" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 540px;">
+        <div class="modal-content" style="background: rgba(26,29,46,0.92); border: 1px solid rgba(255,255,255,0.09); border-radius: 28px; box-shadow: 0 32px 64px rgba(0,0,0,0.55);">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:42px;height:42px;background:rgba(42,182,161,0.15);border:1px solid rgba(42,182,161,0.25);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.2rem;">
+                        <i class="bi bi-journal-code"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="modalProductoTitulo">Nuevo Platillo</h5>
+                        <div style="font-size:.78rem; color:var(--text-muted);" id="modalProductoSub">Agrega un nuevo producto al menú</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white opacity-50 ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form th:action="@{/productos/guardar}" method="post" enctype="multipart/form-data">
+                <input type="hidden" id="productoId" name="id">
+                <div class="modal-body px-4 py-4">
+                    <div class="mb-3">
+                        <label class="form-label-custom">Nombre del Platillo <span style="color:var(--primary)">*</span></label>
+                        <input type="text" id="productoNombre" name="nombre" class="form-control" placeholder="Ej. Hamburguesa Doble" required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Precio de Venta ($) <span style="color:var(--primary)">*</span></label>
+                            <input type="number" step="0.01" id="productoPrecio" name="precioVenta" class="form-control" placeholder="0.00" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Categoría <span style="color:var(--primary)">*</span></label>
+                            <select id="productoCategoria" name="categoria" class="form-select" required>
+                                <option value="">Seleccione...</option>
+                                <option th:each="cat : ${categorias}" th:value="${cat.id}" th:text="${cat.nombre}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom" title="Puntos que gana el cliente al comprar esto">Puntos a Otorgar <i class="bi bi-arrow-up-circle-fill text-success"></i></label>
+                            <input type="number" id="productoPuntos" name="puntosOtorgados" class="form-control" placeholder="0" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom" title="Costo en puntos para que el cliente lo canjee gratis">Precio en Puntos <i class="bi bi-star-fill text-warning"></i></label>
+                            <input type="number" id="productoPuntosPrecio" name="puntosPrecio" class="form-control" placeholder="0" min="0" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-custom">Foto del Platillo (Opcional)</label>
+                        <div id="wrapperFotoExistente" class="d-none mb-2 p-2 border border-secondary rounded d-flex align-items-center justify-content-between" style="background: rgba(255,255,255,0.05);">
+                            <div class="d-flex align-items-center gap-2">
+                                <img id="imgPreview" src="" alt="Miniatura" style="width:40px; height:40px; object-fit:cover; border-radius:6px;">
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">Foto actual</span>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="eliminarFoto" name="eliminarFoto" value="true">
+                                <label class="form-check-label small text-danger" for="eliminarFoto">Eliminar</label>
+                            </div>
+                        </div>
+                        <input type="file" id="productoFoto" name="foto" class="form-control" accept="image/*">
+                    </div>
+                    <div>
+                        <label class="form-label-custom">Descripción</label>
+                        <textarea id="productoDescripcion" name="descripcion" class="form-control" rows="2" placeholder="Ingredientes o notas..."></textarea>
+                    </div>
+
+                    <!-- Toggle Reventa -->
+                    <div class="mt-3 p-3" style="background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.2);border-radius:12px;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div style="color:#fff;font-weight:600;font-size:.9rem;">🏪 Producto de Reventa</div>
+                                <div style="color:var(--text-muted);font-size:.75rem;">Refrescos, snacks empacados, etc.</div>
+                            </div>
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" id="esReventa" name="esReventa" value="true"
+                                       onchange="toggleReventa(this.checked)" style="width:2.5em;height:1.3em;cursor:pointer;">
+                            </div>
+                        </div>
+                        <!-- Selector de insumo (visible solo si esReventa = true) -->
+                        <div id="wrapperInsumoReventa" class="d-none mt-3">
+                            <label class="form-label-custom">Insumo vinculado <span style="color:var(--primary)">*</span></label>
+                            <select id="insumoReventaId" name="insumoReventaId" class="form-select">
+                                <option value="">Selecciona el insumo de stock...</option>
+                                <option th:each="ins : ${insumos}" th:value="${ins.id}"
+                                        th:text="${ins.nombre} + ' (' + ${ins.stockActual} + ' ' + ${ins.unidadMedida} + ')'"></option>
+                            </select>
+                            <div style="font-size:.73rem;color:var(--text-muted);margin-top:4px;">Al venderse, se descontará 1 unidad de este insumo automáticamente.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0 d-flex gap-2">
+                    <button type="button" class="btn-form-cancel" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i> Cancelar</button>
+                    <button type="submit" class="btn-form-submit flex-grow-1" id="btnSubmitProducto"><i class="bi bi-floppy-fill"></i> <span id="btnProductoLabel">Crear Platillo</span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalNuevo() {
+        document.getElementById('modalProductoTitulo').textContent = 'Nuevo Platillo / Producto';
+        document.getElementById('modalProductoSub').textContent = 'Agrega un nuevo producto al menú';
+        document.getElementById('btnProductoLabel').textContent = 'Crear Producto';
+        document.getElementById('productoId').value = '';
+        document.getElementById('productoNombre').value = '';
+        document.getElementById('productoCategoria').value = '';
+        document.getElementById('productoPuntos').value = '0';
+        document.getElementById('productoPuntosPrecio').value = '0';
+        document.getElementById('productoDescripcion').value = '';
+        document.getElementById('productoFoto').value = '';
+        document.getElementById('wrapperFotoExistente').classList.add('d-none');
+        document.getElementById('eliminarFoto').checked = false;
+        document.getElementById('esReventa').checked = false;
+        toggleReventa(false);
+    }
+
+    function toggleReventa(activo) {
+        const wrapper = document.getElementById('wrapperInsumoReventa');
+        if (activo) {
+            wrapper.classList.remove('d-none');
+        } else {
+            wrapper.classList.add('d-none');
+            document.getElementById('insumoReventaId').value = '';
+        }
+    }
+
+    function abrirModalEditar(btn) {
+        document.getElementById('modalProductoTitulo').textContent = 'Editar Producto';
+        document.getElementById('modalProductoSub').textContent = 'Modifica los datos del producto';
+        document.getElementById('btnProductoLabel').textContent = 'Guardar Cambios';
+        document.getElementById('productoId').value = btn.dataset.id;
+        document.getElementById('productoNombre').value = btn.dataset.nombre;
+        document.getElementById('productoPrecio').value = btn.dataset.precio;
+        document.getElementById('productoCategoria').value = btn.dataset.categoria;
+        document.getElementById('productoPuntos').value = btn.dataset.puntos;
+        document.getElementById('productoPuntosPrecio').value = btn.dataset.puntosPrecio;
+        document.getElementById('productoDescripcion').value = btn.dataset.descripcion || '';
+        document.getElementById('productoFoto').value = '';
+
+        // Reventa
+        const esReventa = btn.dataset.esReventa === 'true';
+        document.getElementById('esReventa').checked = esReventa;
+        toggleReventa(esReventa);
+        if (esReventa && btn.dataset.insumoReventa) {
+            document.getElementById('insumoReventaId').value = btn.dataset.insumoReventa;
+        }
+
+        const fotoUrl = btn.dataset.foto;
+        const wrapper = document.getElementById('wrapperFotoExistente');
+        if (fotoUrl && fotoUrl !== 'null' && fotoUrl !== '') {
+            wrapper.classList.remove('d-none');
+            document.getElementById('imgPreview').src = fotoUrl;
+        } else {
+            wrapper.classList.add('d-none');
+        }
+        document.getElementById('eliminarFoto').checked = false;
+
+        new bootstrap.Modal(document.getElementById('modalProducto')).show();
+    }
+</script>
+
+<!-- Modal Receta (Dinámico AJAX) -->
+<div class="modal fade" id="modalReceta" tabindex="-1" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 850px;">
+        <div class="modal-content" style="background: rgba(26,29,46,0.95); border: 1px solid rgba(255,255,255,0.09); border-radius: 28px; box-shadow: 0 32px 64px rgba(0,0,0,0.55);">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <button type="button" class="btn-close btn-close-white opacity-50 ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-2" id="modalRecetaContent">
+                <!-- Contenido inyectado por JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let modalRecetaInstancia = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const modalEl = document.getElementById('modalReceta');
+        modalRecetaInstancia = new bootstrap.Modal(modalEl);
+        
+        // Recargar página al cerrar para actualizar conteo de ingredientes
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            location.reload();
+        });
+    });
+
+    function abrirModalReceta(url) {
+        const contentDiv = document.getElementById('modalRecetaContent');
+        contentDiv.innerHTML = '<div class="text-center p-5"><div class="spinner-border" style="color: var(--primary);" role="status"></div><div class="mt-3" style="color:var(--text-muted)">Cargando receta...</div></div>';
+        modalRecetaInstancia.show();
+        cargarHTMLReceta(url);
+    }
+
+    function cargarHTMLReceta(url, fetchPromise = null) {
+        const contentDiv = document.getElementById('modalRecetaContent');
+        const req = fetchPromise || fetch(url);
+        
+        req.then(response => response.text())
+           .then(html => {
+               const parser = new DOMParser();
+               const doc = parser.parseFromString(html, 'text/html');
+               const formCard = doc.querySelector('.card-form');
+               
+               if(formCard) {
+                   // Limpiar estilos innecesarios de la vista completa
+                   formCard.style.boxShadow = 'none';
+                   formCard.style.border = 'none';
+                   formCard.style.padding = '0 1rem 1rem 1rem';
+                   formCard.style.background = 'transparent';
+                   
+                   // Quitar botón volver
+                   const backBtn = formCard.querySelector('.btn-cancel');
+                   if(backBtn) {
+                       const wrapper = backBtn.closest('.d-flex');
+                       if (wrapper) wrapper.remove();
+                   }
+                   
+                   contentDiv.innerHTML = '';
+                   contentDiv.appendChild(formCard);
+                   
+                   // Extraer formulario de eliminación oculto
+                   const formEliminar = doc.querySelector('#formEliminar');
+                   if(formEliminar) {
+                       formEliminar.style.display = 'none';
+                       contentDiv.appendChild(formEliminar);
+                   }
+                   
+                   interceptarFormulariosReceta(contentDiv, url);
+               } else {
+                   contentDiv.innerHTML = '<div class="alert alert-danger m-4">Error al procesar el contenido de la receta.</div>';
+               }
+           })
+           .catch(error => {
+               contentDiv.innerHTML = `<div class="alert alert-danger m-4">Error de conexión: ${error.message}</div>`;
+           });
+    }
+
+    function interceptarFormulariosReceta(container, currentUrl) {
+        // Interceptar formulario de agregar
+        const formAgregar = container.querySelector('form[action*="/recetas/agregar"]');
+        if (formAgregar) {
+            formAgregar.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const btnSubmit = this.querySelector('button[type="submit"]');
+                if(btnSubmit) btnSubmit.disabled = true;
+                
+                const formData = new FormData(this);
+                const req = fetch(this.action, { method: 'POST', body: formData });
+                cargarHTMLReceta(currentUrl, req);
+            });
+        }
+        
+        // Interceptar botones de eliminar (Insumos de la receta)
+        // Usamos un selector más específico para no confundir con otros botones
+        const deleteBtns = container.querySelectorAll('button.btn-outline-danger');
+        deleteBtns.forEach(btn => {
+            // MUY IMPORTANTE: Eliminar el atributo onclick original que abriría el modal de la página separada
+            btn.removeAttribute('onclick');
+            
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const id = this.dataset.id;
+                const nombre = this.dataset.nombre;
+                
+                if (confirm(`¿Deseas quitar el insumo "${nombre}" de la receta?`)) {
+                    const formEliminar = container.querySelector('#formEliminar');
+                    if (formEliminar) {
+                        // Construir la URL correcta de eliminación
+                        const actionUrl = '/recetas/eliminar/' + id;
+                        
+                        // Preparar los datos (productoId y CSRF)
+                        const formData = new FormData(formEliminar);
+                        
+                        const req = fetch(actionUrl, { 
+                            method: 'POST', 
+                            body: formData 
+                        });
+                        cargarHTMLReceta(currentUrl, req);
+                    } else {
+                        console.error("No se encontró el formulario #formEliminar");
+                    }
+                }
+            });
+        });
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<style>
+        .page-header h1 { font-size: 2.2rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+        
+        /* Ajuste para evitar superposición del sidebar */
+        @media (min-width: 769px) {
+            .main-content { margin-left: var(--sidebar-w); position: relative; z-index: 10; }
+        }
+        @media (max-width: 768px) {
+            .main-content { margin-left: 0 !important; }
+        }
+        .mesa-actions { position: relative; z-index: 20; }
+
+        /* Tarjeta de mesa */
+        .mesa-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 18px;
+            padding: 1.5rem 1.25rem 1.25rem;
+            text-align: center;
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .mesa-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.3); }
+
+        /* Estados por color */
+        .mesa-libre   { border-color: rgba(16,185,129,0.5); background: rgba(16,185,129,0.06); }
+        .mesa-ocupada { border-color: rgba(239,68,68,0.55); background: rgba(239,68,68,0.08); }
+        .mesa-sucia   { border-color: rgba(251,191,36,0.5); background: rgba(251,191,36,0.06); }
+        .mesa-reservada{ border-color: rgba(139,92,246,0.5); background: rgba(139,92,246,0.07); }
+
+        .mesa-numero {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            margin-bottom: 0.2rem;
+        }
+        .mesa-libre   .mesa-numero { color: #34d399; }
+        .mesa-ocupada .mesa-numero { color: #ff7e7e; }
+        .mesa-sucia   .mesa-numero { color: #fbbf24; }
+        .mesa-reservada .mesa-numero { color: #a78bfa; }
+
+        .mesa-estado-badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 0.2rem 0.65rem;
+            border-radius: 20px;
+            margin-bottom: 0.6rem;
+        }
+        .badge-libre    { background: rgba(16,185,129,0.15); color: #34d399; }
+        .badge-ocupada  { background: rgba(239,68,68,0.15); color: #ff7e7e; }
+        .badge-sucia    { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .badge-reservada{ background: rgba(139,92,246,0.15); color: #a78bfa; }
+
+        .mesa-capacidad { font-size: 0.75rem; color: var(--text-muted); }
+        .mesa-zona      { font-size: 0.7rem; color: rgba(255,255,255,0.35); margin-top: 0.2rem; }
+        .mesa-mozo      { font-size: 0.72rem; color: rgba(255,255,255,0.5); margin-top: 0.3rem; }
+        .mesa-tiempo    { font-size: 0.7rem; color: var(--primary); margin-top: 0.2rem; font-weight: 600; }
+
+        .mesa-actions {
+            display: flex;
+            gap: 0.35rem;
+            justify-content: center;
+            margin-top: 0.85rem;
+            flex-wrap: wrap;
+        }
+        .mesa-btn {
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 0.3rem 0.6rem;
+            border-radius: 8px;
+            border: 1px solid;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-decoration: none;
+        }
+        .btn-abrir   { background: rgba(16,185,129,0.12); color: #34d399; border-color: rgba(16,185,129,0.3); }
+        .btn-abrir:hover { background: rgba(16,185,129,0.25); color: #34d399; }
+        .btn-sucia   { background: rgba(251,191,36,0.12); color: #fbbf24; border-color: rgba(251,191,36,0.3); }
+        .btn-sucia:hover { background: rgba(251,191,36,0.25); color: #fbbf24; }
+        .btn-libre   { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); border-color: var(--border); }
+        .btn-libre:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .btn-reservar{ background: rgba(139,92,246,0.12); color: #a78bfa; border-color: rgba(139,92,246,0.3); }
+        .btn-reservar:hover { background: rgba(139,92,246,0.25); color: #a78bfa; }
+        .btn-pos     { background: rgba(42,182,161,0.2); color: #2AB6A1; border-color: rgba(42,182,161,0.4); }
+        .btn-pos:hover { background: rgba(42,182,161,0.35); color: #2AB6A1; }
+        .btn-edit    { background: rgba(78,149,255,0.1); color: #4e95ff; border-color: rgba(78,149,255,0.3); }
+        .btn-edit:hover { background: rgba(78,149,255,0.25); color: #4e95ff; }
+        .btn-del     { background: rgba(255,126,126,0.1); color: #ff7e7e; border-color: rgba(255,126,126,0.2); }
+        .btn-del:hover { background: rgba(255,126,126,0.25); color: #ff7e7e; }
+
+        /* Stat cards */
+        .stat-chip { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem 1.5rem; display:flex; align-items:center; gap:1rem; }
+        .stat-chip .ico { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0; }
+        .stat-chip .val { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+        .stat-chip .lbl { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 0.4rem; }
+
+        /* Alerta de Inactividad (Pulso) */
+        @keyframes pulse-alert {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.8); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); border-color: rgba(239, 68, 68, 0.4); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); border-color: rgba(239, 68, 68, 0.8); }
+        }
+        .mesa-alerta { animation: pulse-alert 2s infinite; }
+        
+        /* Indicador de próxima reserva */
+        .reserva-alert {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #a78bfa;
+            background: rgba(139,92,246,0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 8px;
+            margin-top: 0.4rem;
+            display: inline-block;
+            border: 1px solid rgba(139,92,246,0.2);
+        }
+    </style>
+<main class="main-content">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h1>🪑 Mapa de Mesas</h1>
+            <p style="color:var(--text-muted); margin:0; font-size:.88rem;">
+                Estado en tiempo real de todas las mesas del restaurante
+            </p>
+        </div>
+        <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalMesa" onclick="abrirModalNuevo()" sec:authorize="hasAnyRole('ADMIN','GERENTE')">
+            <i class="bi bi-plus-circle-fill"></i> Nueva Mesa
+        </button>
+    </div>
+
+    <!-- Flash Messages -->
+    <div th:if="${mensajeExito}" class="alert border-0 mb-4 d-flex align-items-center gap-2"
+         style="background:rgba(16,185,129,0.15); color:#34d399; border-radius:12px;">
+        <i class="bi bi-check-circle-fill fs-5"></i>
+        <span th:text="${mensajeExito}"></span>
+    </div>
+    <div th:if="${mensajeError}" class="alert border-0 mb-4"
+         style="background:rgba(239,68,68,0.15); color:#f87171; border-radius:12px;" th:text="${mensajeError}"></div>
+    <span id="mesa-release-confirmed" hidden th:if="${carritoDescartadoMesaId != null}"
+          th:data-mesa-id="${carritoDescartadoMesaId}"></span>
+
+    <!-- Summary Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="stat-chip">
+                <div class="ico" style="background:rgba(255,255,255,0.05);">🪑</div>
+                <div>
+                    <div class="val" th:text="${totalMesas}">0</div>
+                    <div class="lbl">Total Mesas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-chip" style="border-color:rgba(16,185,129,0.25);">
+                <div class="ico" style="background:rgba(16,185,129,0.1); color:#34d399;">✅</div>
+                <div>
+                    <div class="val" style="color:#34d399;" th:text="${libres}">0</div>
+                    <div class="lbl">Libres</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-chip" style="border-color:rgba(239,68,68,0.25);">
+                <div class="ico" style="background:rgba(239,68,68,0.1); color:#ff7e7e;">🔥</div>
+                <div>
+                    <div class="val" style="color:#ff7e7e;" th:text="${ocupadas}">0</div>
+                    <div class="lbl">Ocupadas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="stat-chip" style="border-color:rgba(251,191,36,0.25);">
+                <div class="ico" style="background:rgba(251,191,36,0.1); color:#fbbf24;">🧹</div>
+                <div>
+                    <div class="val" style="color:#fbbf24;" th:text="${sucias}">0</div>
+                    <div class="lbl">Limpieza</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leyenda -->
+    <div class="d-flex gap-4 mb-4 flex-wrap" style="font-size:.78rem; color:var(--text-muted);">
+        <span><span class="legend-dot" style="background:#34d399;"></span> Libre</span>
+        <span><span class="legend-dot" style="background:#ff7e7e;"></span> Ocupada</span>
+        <span><span class="legend-dot" style="background:#fbbf24;"></span> Pendiente limpieza</span>
+        <span><span class="legend-dot" style="background:#a78bfa;"></span> Reservada</span>
+        <span><i class="bi bi-circle-fill text-danger" style="font-size:0.5rem; vertical-align: middle;"></i> Borde parpadeante: Ocupada +60m</span>
+    </div>
+
+    <!-- Mapa de Mesas -->
+    <div th:if="${mesas.isEmpty()}" class="card-custom text-center py-5">
+        <div style="font-size:3rem; margin-bottom:1rem;">🪑</div>
+        <h4 style="color:#fff;">No hay mesas configuradas</h4>
+        <p style="color:var(--text-muted);">Agrega las mesas de tu restaurante para comenzar.</p>
+        <button class="btn-primary-custom mt-2" data-bs-toggle="modal" data-bs-target="#modalMesa" onclick="abrirModalNuevo()" sec:authorize="hasAnyRole('ADMIN','GERENTE')">
+            <i class="bi bi-plus-circle-fill"></i> Agregar Primera Mesa
+        </button>
+    </div>
+
+    <div class="row g-3" th:unless="${mesas.isEmpty()}">
+        <div class="col-6 col-sm-4 col-md-3 col-xl-2" th:each="m : ${mesas}">
+            <div class="mesa-card"
+                 th:classappend="${'mesa-' + estadosMesa.get(m.id).toLowerCase()}"
+                 th:id="'mesa-' + ${m.id}">
+
+                <!-- Estado badge -->
+                <div class="mesa-estado-badge"
+                     th:classappend="${'badge-' + estadosMesa.get(m.id).toLowerCase()}"
+                     th:text="${estadosMesa.get(m.id)}">LIBRE</div>
+
+                <!-- Número grande -->
+                <div class="mesa-numero" th:text="${m.numero}">1</div>
+
+                <!-- Capacidad + Zona -->
+                <div class="mesa-capacidad">
+                    <i class="bi bi-person-fill"></i>
+                    <span th:text="${m.capacidad}">4</span> personas
+                </div>
+                <div class="mesa-zona" th:if="${m.zona}" th:text="${m.zona}">Interior</div>
+
+                <!-- Alerta de próxima reserva -->
+                <div th:if="${proximasReservas != null and proximasReservas.containsKey(m.id)}" class="reserva-alert">
+                    <i class="bi bi-calendar-event"></i> Reserva <span th:text="${proximasReservas.get(m.id).estado.toLowerCase()}">pendiente</span> a las <span th:text="${#temporals.format(proximasReservas.get(m.id).fechaHora, 'HH:mm')}">00:00</span>
+                </div>
+
+                <!-- Info si está ocupada -->
+                <div th:if="${m.estado == 'OCUPADA'}">
+                    <div class="mesa-mozo" th:if="${m.mozo}">
+                        <i class="bi bi-person-badge"></i>
+                        <span th:text="${m.mozo}">Mozo</span>
+                    </div>
+                    <div class="mesa-tiempo live-timer" th:if="${m.horaApertura != null}"
+                         th:data-apertura="${m.horaApertura}">
+                        <i class="bi bi-clock-fill"></i>
+                        <span class="timer-text">Calculando...</span>
+                    </div>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="mesa-actions">
+                    <!-- LIBRE: abrir o reservar -->
+                    <th:block th:if="${estadosMesa.get(m.id) == 'LIBRE'}">
+                        <form th:action="@{/mesas/{id}/estado(id=${m.id})}" method="post" class="d-inline">
+                            <input type="hidden" name="estado" value="OCUPADA">
+                            <button type="submit" class="mesa-btn btn-abrir" title="Abrir cuenta">
+                                <i class="bi bi-door-open-fill"></i> Abrir
+                            </button>
+                        </form>
+                        <a th:href="@{/reservas(mesaId=${m.id})}" class="mesa-btn btn-reservar" title="Hacer reservación">
+                            <i class="bi bi-calendar-check-fill"></i> Reservar
+                        </a>
+                    </th:block>
+
+                    <!-- OCUPADA: ir al POS o marcar sucia -->
+                    <th:block th:if="${estadosMesa.get(m.id) == 'OCUPADA'}">
+                        <a th:href="@{/pos(mesaId=${m.id})}" class="mesa-btn btn-pos" title="Ir al POS">
+                            <i class="bi bi-receipt"></i> POS
+                        </a>
+                        <form th:action="@{/mesas/{id}/estado(id=${m.id})}" method="post" class="d-inline mesa-release-form" th:data-mesa-id="${m.id}">
+                            <input type="hidden" name="estado" value="SUCIA">
+                            <input type="hidden" name="decisionLiberacion" value="">
+                            <button type="submit" class="mesa-btn btn-sucia" title="Marcar como sucia">
+                                <i class="bi bi-trash3-fill"></i> Liberar
+                            </button>
+                        </form>
+                    </th:block>
+
+                    <!-- SUCIA: marcar como limpia -->
+                    <th:block th:if="${estadosMesa.get(m.id) == 'SUCIA'}">
+                        <a th:href="@{/pos(mesaId=${m.id})}" class="mesa-btn btn-pos mesa-resume-pos d-none" th:data-mesa-id="${m.id}">Retomar POS</a>
+                        <form th:action="@{/mesas/{id}/estado(id=${m.id})}" method="post" class="d-inline mesa-release-form" th:data-mesa-id="${m.id}">
+                            <input type="hidden" name="estado" value="LIBRE">
+                            <input type="hidden" name="decisionLiberacion" value="">
+                            <button type="submit" class="mesa-btn btn-libre" title="Marcar como limpia">
+                                <i class="bi bi-check2-circle"></i> Lista
+                            </button>
+                        </form>
+                    </th:block>
+
+                    <!-- RESERVADA: abrir o cancelar -->
+                    <th:block th:if="${estadosMesa.get(m.id) == 'RESERVADA'}">
+                        <form th:action="@{/mesas/{id}/estado(id=${m.id})}" method="post" class="d-inline">
+                            <input type="hidden" name="estado" value="OCUPADA">
+                            <input type="hidden" name="reservaId" th:value="${reservasBloqueantes.get(m.id)}">
+                            <button type="submit" class="mesa-btn btn-abrir" title="Sentar clientes">
+                                <i class="bi bi-door-open-fill"></i> Sentar
+                            </button>
+                        </form>
+                        <a th:href="@{/reservas(mesaId=${m.id})}" class="mesa-btn btn-libre" title="Gestionar reservación">
+                            <i class="bi bi-calendar-event"></i> Reservas
+                        </a>
+                    </th:block>
+
+                    <!-- Editar (solo admin/gerente) -->
+                    <button type="button" class="mesa-btn btn-edit" title="Editar mesa"
+                            sec:authorize="hasAnyRole('ADMIN','GERENTE')"
+                            th:data-id="${m.id}"
+                            th:data-numero="${m.numero}"
+                            th:data-capacidad="${m.capacidad}"
+                            th:data-zona="${m.zona}"
+                            th:data-estado="${estadosMesa.get(m.id)}"
+                            onclick="abrirModalEditar(this)">
+                        <i class="bi bi-pencil-fill"></i>
+                    </button>
+
+                    <!-- Eliminar (solo admin) -->
+                    <button type="button" class="mesa-btn btn-del" 
+                            sec:authorize="hasRole('ADMIN')" 
+                            th:data-id="${m.id}"
+                            onclick="eliminarMesa(this)" 
+                            title="Eliminar Mesa"
+                            style="position:relative; z-index:50;">
+                        <i class="bi bi-trash3-fill"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script th:src="@{/js/pos-cart-context.js}"></script>
+<script>
+    let pendingReleaseForm = null;
+    document.addEventListener('DOMContentLoaded', () => {
+        const confirmed = document.getElementById('mesa-release-confirmed');
+        if (confirmed) PosCartContexts.clear(PosCartContexts.forMesa(confirmed.dataset.mesaId));
+        document.querySelectorAll('.mesa-release-form').forEach(form => {
+            form.addEventListener('submit', event => {
+                const context = PosCartContexts.forMesa(form.dataset.mesaId);
+                const legacy = PosCartContexts.legacyStatus(context);
+                if (legacy || PosCartContexts.hasPending(context)) {
+                    event.preventDefault();
+                    pendingReleaseForm = form;
+                    document.getElementById('mesa-release-message').textContent = legacy
+                        ? 'Hay un carrito anterior sin contexto resuelto. Abre el POS para asignarlo o descartarlo antes de liberar la mesa.'
+                        : 'Esta mesa tiene un carrito pendiente. Puedes volver al POS o descartarlo expresamente para liberar la mesa.';
+                    document.getElementById('mesa-release-discard').disabled = Boolean(legacy);
+                    document.getElementById('mesa-release-pos').href = '/pos?mesaId=' + encodeURIComponent(form.dataset.mesaId);
+                    new bootstrap.Modal(document.getElementById('modalLiberarMesa')).show();
+                } else {
+                    form.elements['decisionLiberacion'].value = 'SIN_CARRITO';
+                }
+            });
+        });
+        document.querySelectorAll('.mesa-resume-pos').forEach(link => {
+            link.classList.toggle('d-none', !PosCartContexts.hasPending(PosCartContexts.forMesa(link.dataset.mesaId)));
+        });
+        document.getElementById('mesa-release-discard').addEventListener('click', () => {
+            if (!pendingReleaseForm) return;
+            pendingReleaseForm.elements['decisionLiberacion'].value = 'DESCARTAR';
+            pendingReleaseForm.submit();
+        });
+    });
+    // Auto-refresh del mapa cada 60 segundos
+    setTimeout(() => location.reload(), 60000);
+
+    // Cronómetros Activos
+    function updateLiveTimers() {
+        const timers = document.querySelectorAll('.live-timer');
+        const now = new Date();
+        
+        timers.forEach(timer => {
+            const aperturaStr = timer.getAttribute('data-apertura');
+            if (!aperturaStr) return;
+            
+            // LocalDateTime de Java a Date de JS
+            const apertura = new Date(aperturaStr);
+            const diffMs = now - apertura;
+            const diffMins = Math.floor(diffMs / 60000);
+            
+            const spanText = timer.querySelector('.timer-text');
+            
+            if (diffMins < 60) {
+                spanText.textContent = `Hace ${diffMins} min`;
+                timer.style.color = 'var(--primary)';
+            } else {
+                const hrs = Math.floor(diffMins / 60);
+                const mins = diffMins % 60;
+                spanText.textContent = `Hace ${hrs}h ${mins}m`;
+                timer.style.color = '#ef4444'; // Rojo advertencia
+                
+                // Añadir pulso a la tarjeta padre
+                const card = timer.closest('.mesa-card');
+                if (card && !card.classList.contains('mesa-alerta')) {
+                    card.classList.add('mesa-alerta');
+                }
+            }
+        });
+    }
+
+    // Actualizar cronómetros cada minuto
+    updateLiveTimers();
+    setInterval(updateLiveTimers, 60000);
+
+    let mesaIdAEliminar = null;
+    function eliminarMesa(btn) {
+        mesaIdAEliminar = btn.getAttribute('data-id');
+        const modal = new bootstrap.Modal(document.getElementById('modalConfirmarEliminar'));
+        modal.show();
+    }
+
+    // Listener para el botón de confirmación final dentro del modal
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnFinal = document.getElementById('btnConfirmarEliminarFinal');
+        if (btnFinal) {
+            btnFinal.addEventListener('click', function() {
+                if (mesaIdAEliminar) {
+                    const form = document.getElementById('formEliminarMesa');
+                    form.action = '/mesas/eliminar/' + mesaIdAEliminar;
+                    form.submit();
+                }
+            });
+        }
+    });
+
+    function abrirModalNuevo() {
+        document.getElementById('modalMesaTitulo').textContent = 'Nueva Mesa';
+        document.getElementById('modalMesaSub').textContent = 'Agrega una mesa al salón';
+        document.getElementById('btnMesaLabel').textContent = 'Crear Mesa';
+        document.getElementById('mesaId').value = '';
+        document.getElementById('mesaNumero').value = '';
+        document.getElementById('mesaCapacidad').value = '4';
+        document.getElementById('mesaZona').value = 'Principal';
+        document.getElementById('mesaEstado').value = 'LIBRE';
+    }
+
+    function abrirModalEditar(btn) {
+        document.getElementById('modalMesaTitulo').textContent = 'Editar Mesa';
+        document.getElementById('modalMesaSub').textContent = 'Modifica los datos de la mesa';
+        document.getElementById('btnMesaLabel').textContent = 'Guardar Cambios';
+        document.getElementById('mesaId').value = btn.dataset.id;
+        document.getElementById('mesaNumero').value = btn.dataset.numero;
+        document.getElementById('mesaCapacidad').value = btn.dataset.capacidad;
+        document.getElementById('mesaZona').value = btn.dataset.zona;
+        document.getElementById('mesaEstado').value = btn.dataset.estado;
+        new bootstrap.Modal(document.getElementById('modalMesa')).show();
+    }
+</script>
+
+<div class="modal fade" id="modalLiberarMesa" tabindex="-1" aria-labelledby="modalLiberarMesaTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1a1d2e;color:#fff;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLiberarMesaTitulo">Carrito pendiente en esta mesa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="mesa-release-message"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <a id="mesa-release-pos" class="btn btn-primary" href="/pos">Volver al POS</a>
+                <button type="button" id="mesa-release-discard" class="btn btn-danger">Descartar carrito y liberar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Crear / Editar Mesa -->
+<div class="modal fade" id="modalMesa" tabindex="-1" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+        <div class="modal-content" style="background: rgba(26,29,46,0.92); border: 1px solid rgba(255,255,255,0.09); border-radius: 28px; box-shadow: 0 32px 64px rgba(0,0,0,0.55);">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:42px;height:42px;background:rgba(42,182,161,0.15);border:1px solid rgba(42,182,161,0.25);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.2rem;">
+                        <i class="bi bi-grid-fill"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="modalMesaTitulo">Nueva Mesa</h5>
+                        <div style="font-size:.78rem; color:var(--text-muted);" id="modalMesaSub">Agrega una mesa al salón</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white opacity-50 ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form th:action="@{/mesas/guardar}" method="post">
+                <input type="hidden" id="mesaId" name="id">
+                <div class="modal-body px-4 py-4">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Número / Nombre <span style="color:var(--primary)">*</span></label>
+                            <input type="text" id="mesaNumero" name="numero" class="form-control" placeholder="Ej. 1, 10, VIP-1" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Capacidad <span style="color:var(--primary)">*</span></label>
+                            <input type="number" id="mesaCapacidad" name="capacidad" class="form-control" value="4" min="1" required>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Zona / Sector</label>
+                            <input type="text" id="mesaZona" name="zona" class="form-control" placeholder="Ej. Terraza, Interior">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Estado (cambiar desde el mapa)</label>
+                            <select id="mesaEstado" class="form-select" disabled>
+                                <option value="LIBRE">Libre</option>
+                                <option value="OCUPADA">Ocupada</option>
+                                <option value="SUCIA">Sucia / Limpieza</option>
+                                <option value="RESERVADA">Reservada</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0 d-flex gap-2">
+                    <button type="button" class="btn-form-cancel" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i> Cancelar</button>
+                    <button type="submit" class="btn-form-submit flex-grow-1" id="btnSubmitMesa"><i class="bi bi-floppy-fill"></i> <span id="btnMesaLabel">Crear Mesa</span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Formulario oculto global para eliminar mesa -->
+<form id="formEliminarMesa" method="post" style="display:none;">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+</form>
+
+<!-- Modal de Confirmación de Eliminación Premium -->
+<div class="modal fade" id="modalConfirmarEliminar" tabindex="-1" aria-hidden="true" style="backdrop-filter: blur(8px);">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
+        <div class="modal-content" style="background: #1a1d2e; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3" style="width:64px; height:64px; background:rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 20px; display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 2rem; margin: 0 auto;">
+                    <i class="bi bi-trash3-fill"></i>
+                </div>
+                <h4 class="fw-bold text-white mb-2">¿Eliminar Mesa?</h4>
+                <p class="text-muted px-2" style="font-size: 0.9rem;">
+                    Esta acción es irreversible. Se eliminará la mesa y toda su configuración del sistema.
+                </p>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="button" class="btn w-100 py-2" data-bs-dismiss="modal" 
+                            style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; font-weight: 600;">
+                        Cancelar
+                    </button>
+                    <button type="button" id="btnConfirmarEliminarFinal" class="btn w-100 py-2" 
+                            style="background: #ef4444; color: #fff; border: none; border-radius: 14px; font-weight: 700; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
+                        Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

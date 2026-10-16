@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<main class="main-content receipt-page">
+<link rel="stylesheet" th:href="@{/css/receipts.css}">
+<header class="page-header"><h1 th:text="${'Recepción #' + detail.header.id}"></h1><a th:href="@{/inventario/recepciones}">Historial de recepciones</a> · <a th:href="@{/inventario/recepciones/nueva}">Nueva recepción</a></header>
+<p th:if="${!detail.causal}" class="alert alert-warning">Sin efecto causal íntegro verificado. Este registro de almacenamiento no demuestra mercancía recibida; no se repara al consultarlo.</p>
+<dl class="card-custom">
+<dt>Estado</dt><dd th:text="${detail.header.estado}"></dd>
+<dt>Registrada / actor</dt><dd th:text="${detail.header.registrado_en + ' · ' + detail.header.actor}"></dd>
+<dt>Proveedor / documento</dt><dd th:text="${(detail.header.proveedor != null ? detail.header.proveedor : 'Sin proveedor') + ' · ' + (detail.header.documento_externo != null ? detail.header.documento_externo : 'Sin documento')}"></dd>
+<dt>Costo total informado</dt><dd th:text="${detail.header.costo + ' ' + detail.header.moneda}"></dd>
+<dt>Intento</dt><dd class="receipt-reference" th:text="${detail.header.request_id}"></dd>
+</dl>
+<article th:each="l : ${detail.lines}" class="card-custom receipt-line">
+<h2 th:text="${'Línea ' + l.line_no + ' · ' + l.insumo_nombre}"></h2>
+<p th:text="${l.presentation_nombre + ' · ' + l.modo}"></p>
+<p th:text="${'Comprada: ' + l.cantidad_comprada + ' ' + l.unidad_compra_codigo + ' · Base efectiva: ' + l.cantidad_base_efectiva + ' ' + l.unidad_base_codigo}"></p>
+<p th:if="${l.factor_base != null}" th:text="${'Factor histórico: ' + l.factor_base}"></p>
+<p th:if="${l.cantidad_base_recibida != null}" th:text="${'Base real medida: ' + l.cantidad_base_recibida + ' ' + l.unidad_base_codigo}"></p>
+<p th:text="${'Costo real: ' + l.costo_total_real + ' ' + detail.header.moneda}"></p>
+<p class="receipt-reference" th:text="${'Operación: ' + l.operation_id}"></p>
+<p th:text="${l.causal_ok ? 'Movimiento #' + l.movement_id + ' · ' + l.causal_origin + ' · ' + l.causal_reference : 'Sin causa íntegra verificada'}"></p>
+</article>
+<a th:if="${detail.header.reversal_id != null}" th:href="@{/inventario/recepciones/{id}/reversos/{reversalId}(id=${detail.header.id},reversalId=${detail.header.reversal_id})}">Ver reverso auditado</a>
+<a class="btn btn-outline-light" th:if="${canRevert and detail.header.reversal_id == null and detail.causal}"
+   th:href="@{/inventario/recepciones/{id}/reverso/nuevo(id=${detail.header.id})}">Iniciar reverso completo</a>
+<p>Hecho confirmado de solo lectura. Las conversiones y costos son snapshots; no se recalculan desde el catálogo actual.</p>
+</main></body></html>

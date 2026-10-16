@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+    <style>
+        .main-content {
+            background: linear-gradient(rgba(10,11,20,0.8), rgba(10,11,20,0.8)), url('/img/restaurant-bg.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        h1 { font-size: 2.2rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+        .summary-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .sumbox { background: rgba(255,255,255,.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius:14px; padding:1.25rem; text-align:center; }
+        .sumbox .val { font-size: 1.6rem; font-weight: 800; }
+        .sumbox .lbl { font-size: .72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing:.06em; margin-top:.2rem; }
+        .expected-box { background: rgba(16,185,129,.1); backdrop-filter: blur(10px); border: 1px solid rgba(16,185,129,.25); border-radius:14px; padding:1.5rem; margin-bottom:1.5rem; }
+        .btn-close-shift { background: linear-gradient(135deg,#2AB6A1,#1E8E7C); border:none; color:#fff; border-radius:14px; padding:1rem 2rem; font-weight:800; font-size:1rem; box-shadow: 0 4px 20px rgba(42,182,161,.3); transition: transform .2s; }
+        .btn-close-shift:hover { transform: translateY(-2px); }
+        .diff-live { font-size: 1.8rem; font-weight:800; padding:.5rem 0; }
+        .text-sobrante { color:#34d399; }
+        .text-faltante { color:#f87171; }
+        .card-glass { background: rgba(26,29,46,0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; }
+    </style>
+<main class="main-content p-4">
+    <div class="container-fluid" style="max-width: 1000px; margin: auto;">
+        <div class="mb-4">
+            <a href="/caja" style="color:var(--text-muted); text-decoration:none; font-size:.85rem; background: rgba(0,0,0,0.3); padding: 0.5rem 1rem; border-radius: 10px; backdrop-filter: blur(5px);">
+                <i class="bi bi-arrow-left me-1"></i> Volver al panel de caja
+            </a>
+        </div>
+
+    <h1 class="mb-1">🔒 Corte de Caja</h1>
+    <p style="color:var(--text-muted); font-size:.88rem; margin-bottom:2rem;">Arqueo del turno — cuenta el dinero físico y registra el cierre.</p>
+
+    <!-- Resumen del Turno -->
+    <div class="summary-row">
+        <div class="sumbox">
+            <div class="val" style="color:#fff;" th:text="'$' + ${caja.montoInicial}">$0</div>
+            <div class="lbl">Fondo Inicial</div>
+        </div>
+        <div class="sumbox" style="border-color:rgba(16,185,129,.25);">
+            <div class="val text-success" th:text="'$' + ${totalEfectivo}">$0</div>
+            <div class="lbl">Ventas Efectivo</div>
+        </div>
+        <div class="sumbox" style="border-color:rgba(78,149,255,.25);">
+            <div class="val" style="color:#4e95ff;" th:text="'$' + ${totalTarjeta}">$0</div>
+            <div class="lbl">Ventas Tarjeta</div>
+        </div>
+        <div class="sumbox" style="border-color:rgba(42,182,161,.25);">
+            <div class="val" style="color:#2AB6A1;" th:text="'$' + ${totalVentas}">$0</div>
+            <div class="lbl">Total Vendido</div>
+        </div>
+        <div class="sumbox" style="border-color:rgba(245,158,11,.25);">
+            <div class="val" style="color:#fbbf24;" th:text="${ticketsTurno}">0</div>
+            <div class="lbl">Tickets</div>
+        </div>
+    </div>
+
+    <!-- Monto esperado en caja -->
+    <div class="expected-box d-flex align-items-center gap-3">
+        <i class="bi bi-cash-stack fs-2" style="color:#34d399;"></i>
+        <div>
+            <div style="font-size:.78rem; color:#34d399; font-weight:700; text-transform:uppercase; letter-spacing:.06em;">Efectivo Esperado en Caja</div>
+            <div style="font-size:2rem; font-weight:800; color:#fff;" th:text="'$' + ${esperadoEnCaja}">$0</div>
+            <div style="font-size:.8rem; color:var(--text-muted);">Fondo inicial + Ventas en efectivo − Retiros</div>
+        </div>
+    </div>
+
+    <!-- Formulario de Cierre -->
+    <div class="card-glass p-4">
+        <h5 class="mb-3 fw-bold" style="color:#fff;">Arqueo Final</h5>
+        <form th:action="@{/caja/cerrar/{id}(id=${caja.id})}" method="post">
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Dinero Físico Contado *</label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background:rgba(255,255,255,.04); border-color:var(--border); color:#fbbf24; font-weight:700;">$</span>
+                        <input type="number" name="montoContado" id="montoContado"
+                               step="0.01" min="0" class="form-control" placeholder="0.00" required autofocus
+                               th:data-esperado="${esperadoEnCaja}"
+                               oninput="calcDiff(this)"
+                               style="background:rgba(255,255,255,.03); border-color:var(--border); color:#fff;">
+                    </div>
+                    <div class="mt-2" style="font-size:.8rem; color:var(--text-muted);">
+                        Cuenta el efectivo físico en la caja y escribe el total.
+                    </div>
+                </div>
+                <div class="col-md-6 d-flex align-items-center justify-content-center">
+                    <div class="text-center">
+                        <div style="font-size:.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.35rem;">Diferencia</div>
+                        <div id="diff-display" class="diff-live">—</div>
+                        <div id="diff-label" style="font-size:.75rem; color:var(--text-muted);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Notas del Cajero</label>
+                <textarea name="notasCierre" rows="2" class="form-control"
+                          placeholder="Ej: Se realizaron 2 retiros de $200 para pago de proveedor..."
+                          style="background:rgba(255,255,255,.03); border-color:var(--border); color:#fff; resize:none;"></textarea>
+            </div>
+
+            <div class="d-flex gap-3">
+                <a href="/caja" class="btn" style="background:rgba(255,255,255,.05); color:var(--text-muted); border-radius:12px; padding:.85rem 1.5rem;">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-close-shift flex-grow-1">
+                    <i class="bi bi-lock-fill me-2"></i> Confirmar Corte de Caja
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script>
+    function calcDiff(input) {
+        const esperado = parseFloat(input.dataset.esperado) || 0;
+        const contado = parseFloat(input.value) || 0;
+        const diff = contado - esperado;
+        const display = document.getElementById('diff-display');
+        const label = document.getElementById('diff-label');
+
+        if (input.value === '') { display.textContent = '—'; label.textContent = ''; return; }
+
+        display.textContent = '$' + Math.abs(diff).toFixed(2);
+        if (diff > 0) {
+            display.className = 'diff-live text-sobrante';
+            label.textContent = '✅ Sobrante';
+            label.style.color = '#34d399';
+        } else if (diff < 0) {
+            display.className = 'diff-live text-faltante';
+            label.textContent = '⚠️ Faltante';
+            label.style.color = '#f87171';
+        } else {
+            display.className = 'diff-live';
+            display.style.color = '#fff';
+            label.textContent = '✅ Perfecto — Sin diferencias';
+            label.style.color = '#34d399';
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+COL|asistencia|1|id|bigint|true|nextval('asistencia_id_seq'::regclass)||
+COL|asistencia|2|hora_entrada|timestamp(6) without time zone|true|||
+COL|asistencia|3|hora_salida|timestamp(6) without time zone|false|||
+COL|asistencia|4|horas_trabajadas|double precision|false|||
+COL|asistencia|5|usuario_id|bigint|true|||
+COL|auditoria|1|id|bigint|true|nextval('auditoria_id_seq'::regclass)||
+COL|auditoria|2|accion|character varying(255)|true|||
+COL|auditoria|3|descripcion|character varying(2000)|false|||
+COL|auditoria|4|fecha|timestamp(6) without time zone|true|||
+COL|auditoria|5|modulo|character varying(255)|false|||
+COL|auditoria|6|usuario|character varying(255)|true|||
+COL|categoria|1|id|bigint|true|nextval('categoria_id_seq'::regclass)||
+COL|categoria|2|activo|boolean|true|true||
+COL|categoria|3|descripcion|text|false|||
+COL|categoria|4|nombre|character varying(100)|true|||
+COL|categoria|5|tipo|character varying(20)|true|'MENU'::character varying||
+COL|clientes|10|referencias|character varying(500)|false|||
+COL|clientes|11|saldo_credito|numeric(10,2)|true|||
+COL|clientes|12|telefono|character varying(255)|false|||
+COL|clientes|13|tipo|character varying(255)|true|||
+COL|clientes|14|total_gastado|numeric(12,2)|true|||
+COL|clientes|1|id|bigint|true|nextval('clientes_id_seq'::regclass)||
+COL|clientes|2|activo|boolean|true|true||
+COL|clientes|3|direccion|character varying(500)|false|||
+COL|clientes|4|email|character varying(255)|false|||
+COL|clientes|5|fecha_registro|timestamp(6) without time zone|true|||
+COL|clientes|6|limite_credito|numeric(10,2)|true|||
+COL|clientes|7|mapa_url|character varying(1000)|false|||
+COL|clientes|8|nombre|character varying(255)|true|||
+COL|clientes|9|puntos|integer|true|||
+COL|configuracion_sistema|10|mod_asistencia|boolean|true|||
+COL|configuracion_sistema|11|mod_caja|boolean|true|||
+COL|configuracion_sistema|12|mod_clientes|boolean|true|||
+COL|configuracion_sistema|13|mod_gastos|boolean|true|||
+COL|configuracion_sistema|14|mod_historial|boolean|true|||
+COL|configuracion_sistema|15|mod_ia|boolean|true|||
+COL|configuracion_sistema|16|mod_kds|boolean|true|||
+COL|configuracion_sistema|17|mod_mesas|boolean|true|||
+COL|configuracion_sistema|18|mod_reportes|boolean|true|||
+COL|configuracion_sistema|19|mod_reservas|boolean|true|||
+COL|configuracion_sistema|1|id|bigint|true|||
+COL|configuracion_sistema|20|moneda|character varying(255)|false|||
+COL|configuracion_sistema|21|moneda_fecha|character varying(255)|false|||
+COL|configuracion_sistema|22|nivel_plan|character varying(20)|true|||
+COL|configuracion_sistema|23|nombre_negocio|character varying(255)|false|||
+COL|configuracion_sistema|24|notas_maestras|character varying(2000)|false|||
+COL|configuracion_sistema|25|permitir_descuentos|boolean|false|||
+COL|configuracion_sistema|26|porcentaje_iva|numeric(5,2)|false|||
+COL|configuracion_sistema|27|precio_personalizado|numeric(38,2)|false|||
+COL|configuracion_sistema|28|rfc|character varying(255)|false|||
+COL|configuracion_sistema|29|simbolo_moneda|character varying(255)|false|||
+COL|configuracion_sistema|2|direccion|character varying(500)|false|||
+COL|configuracion_sistema|30|slogan|character varying(255)|false|||
+COL|configuracion_sistema|31|telefono|character varying(255)|false|||
+COL|configuracion_sistema|32|zona_horaria|character varying(255)|false|||
+COL|configuracion_sistema|3|email|character varying(255)|false|||
+COL|configuracion_sistema|4|fecha_expiracion|character varying(255)|false|||
+COL|configuracion_sistema|5|iva_incluido|boolean|false|||
+COL|configuracion_sistema|6|limite_dispositivos|integer|false|||
+COL|configuracion_sistema|7|limite_productos|integer|false|||
+COL|configuracion_sistema|8|limite_usuarios|integer|false|||
+COL|configuracion_sistema|9|mensaje_ticket|character varying(1000)|false|||
+COL|corte_caja|10|total_retiros|numeric(12,2)|false|||
+COL|corte_caja|11|total_tarjeta|numeric(12,2)|false|||
+COL|corte_caja|12|total_ventas|numeric(12,2)|false|||
+COL|corte_caja|13|usuario_id|bigint|false|||
+COL|corte_caja|1|id|bigint|true|nextval('corte_caja_id_seq'::regclass)||
+COL|corte_caja|2|diferencia|numeric(12,2)|false|||
+COL|corte_caja|3|estado|character varying(255)|true|||
+COL|corte_caja|4|fecha_apertura|timestamp(6) without time zone|true|||
+COL|corte_caja|5|fecha_cierre|timestamp(6) without time zone|false|||
+COL|corte_caja|6|monto_contado|numeric(12,2)|false|||
+COL|corte_caja|7|monto_inicial|numeric(12,2)|true|||
+COL|corte_caja|8|notas_cierre|character varying(500)|false|||
+COL|corte_caja|9|total_efectivo|numeric(12,2)|false|||
+COL|gastos|1|id|bigint|true|nextval('gastos_id_seq'::regclass)||
+COL|gastos|2|activo|boolean|true|true||
+COL|gastos|3|categoria|character varying(255)|true|||
+COL|gastos|4|descripcion|character varying(255)|true|||
+COL|gastos|5|fecha|timestamp(6) without time zone|true|||
+COL|gastos|6|monto|numeric(38,2)|true|||
+COL|gastos|7|usuario_id|bigint|false|||
+COL|insumo|1|id|bigint|true|nextval('insumo_id_seq'::regclass)||
+COL|insumo|2|activo|boolean|true|true||
+COL|insumo|3|costo_unitario|numeric(10,2)|true|||
+COL|insumo|4|nombre|character varying(150)|true|||
+COL|insumo|5|stock_actual|numeric(10,2)|true|||
+COL|insumo|6|stock_minimo|numeric(10,2)|true|||
+COL|insumo|7|unidad_medida|character varying(50)|true|||
+COL|insumo|8|categoria_id|bigint|false|||
+COL|insumo|9|proveedor_id|bigint|false|||
+COL|mesas|1|id|bigint|true|nextval('mesas_id_seq'::regclass)||
+COL|mesas|2|activo|boolean|true|true||
+COL|mesas|3|capacidad|integer|true|||
+COL|mesas|4|estado|character varying(255)|true|||
+COL|mesas|5|hora_apertura|timestamp(6) without time zone|false|||
+COL|mesas|6|mozo|character varying(255)|false|||
+COL|mesas|7|numero|integer|true|||
+COL|mesas|8|zona|character varying(255)|false|||
+COL|mesas|9|venta_id|bigint|false|||
+COL|movimiento_inventario|1|id|bigint|true|nextval('movimiento_inventario_id_seq'::regclass)||
+COL|movimiento_inventario|2|cantidad|numeric(10,2)|true|||
+COL|movimiento_inventario|3|comentario|text|false|||
+COL|movimiento_inventario|4|fecha|timestamp(6) without time zone|true|||
+COL|movimiento_inventario|5|tipo_movimiento|character varying(50)|true|||
+COL|movimiento_inventario|6|insumo_id|bigint|true|||
+COL|movimiento_inventario|7|usuario_id|bigint|true|||
+COL|producto|10|categoria_id|bigint|false|||
+COL|producto|11|insumo_reventa_id|bigint|false|||
+COL|producto|1|id|bigint|true|nextval('producto_id_seq'::regclass)||
+COL|producto|2|activo|boolean|true|true||
+COL|producto|3|descripcion|text|false|||
+COL|producto|4|es_reventa|boolean|true|false||
+COL|producto|5|imagen_url|character varying(255)|false|||
+COL|producto|6|nombre|character varying(150)|true|||
+COL|producto|7|precio_venta|numeric(10,2)|true|||
+COL|producto|8|puntos_otorgados|integer|true|||
+COL|producto|9|puntos_precio|integer|true|||
+COL|proveedor|1|id|bigint|true|nextval('proveedor_id_seq'::regclass)||
+COL|proveedor|2|activo|boolean|true|true||
+COL|proveedor|3|contacto_nombre|character varying(150)|false|||
+COL|proveedor|4|email|character varying(100)|false|||
+COL|proveedor|5|nombre_empresa|character varying(150)|true|||
+COL|proveedor|6|telefono|character varying(20)|false|||
+COL|receta|1|id|bigint|true|nextval('receta_id_seq'::regclass)||
+COL|receta|2|cantidad|numeric(10,4)|true|||
+COL|receta|3|insumo_id|bigint|true|||
+COL|receta|4|producto_id|bigint|true|||
+COL|reservas|10|telefono_cliente|character varying(255)|false|||
+COL|reservas|11|cliente_id|bigint|false|||
+COL|reservas|12|mesa_id|bigint|false|||
+COL|reservas|1|id|bigint|true|nextval('reservas_id_seq'::regclass)||
+COL|reservas|2|email_cliente|character varying(255)|false|||
+COL|reservas|3|estado|character varying(255)|true|||
+COL|reservas|4|fecha_creacion|timestamp(6) without time zone|true|||
+COL|reservas|5|fecha_hora|timestamp(6) without time zone|true|||
+COL|reservas|6|nombre_cliente|character varying(255)|false|||
+COL|reservas|7|notas|character varying(500)|false|||
+COL|reservas|8|numero_personas|integer|true|||
+COL|reservas|9|origen|character varying(255)|true|||
+COL|sub_receta|1|id|bigint|true|nextval('sub_receta_id_seq'::regclass)||
+COL|sub_receta|2|cantidad|numeric(10,4)|true|||
+COL|sub_receta|3|ingrediente_id|bigint|true|||
+COL|sub_receta|4|insumo_destino_id|bigint|true|||
+COL|usuario|1|id|bigint|true|nextval('usuario_id_seq'::regclass)||
+COL|usuario|2|activo|boolean|true|true||
+COL|usuario|3|nombre_completo|character varying(150)|true|||
+COL|usuario|4|password|character varying(255)|true|||
+COL|usuario|5|pin|character varying(6)|false|||
+COL|usuario|6|rol|character varying(50)|true|||
+COL|usuario|7|username|character varying(50)|true|||
+COL|venta_detalles|1|id|bigint|true|nextval('venta_detalles_id_seq'::regclass)||
+COL|venta_detalles|2|canjeado|boolean|true|||
+COL|venta_detalles|3|cantidad|integer|true|||
+COL|venta_detalles|4|estado|character varying(50)|true|||
+COL|venta_detalles|5|notas|character varying(255)|false|||
+COL|venta_detalles|6|precio_unidad|numeric(38,2)|true|||
+COL|venta_detalles|7|subtotal|numeric(38,2)|true|||
+COL|venta_detalles|8|producto_id|bigint|true|||
+COL|venta_detalles|9|venta_id|bigint|true|||
+COL|ventas|10|cliente_id|bigint|false|||
+COL|ventas|11|mesa_id|bigint|false|||
+COL|ventas|12|usuario_id|bigint|true|||
+COL|ventas|1|id|bigint|true|nextval('ventas_id_seq'::regclass)||
+COL|ventas|2|cambio|numeric(10,2)|false|||
+COL|ventas|3|fecha|timestamp(6) without time zone|true|||
+COL|ventas|4|metodo_pago|character varying(255)|false|||
+COL|ventas|5|monto_efectivo|numeric(10,2)|false|||
+COL|ventas|6|monto_tarjeta|numeric(10,2)|false|||
+COL|ventas|7|puntos_canjeados|integer|false|||
+COL|ventas|8|puntos_ganados|integer|false|||
+COL|ventas|9|total|numeric(38,2)|true|||
+CON|asistencia|asistencia_pkey|p|true|PRIMARY KEY (id)
+CON|asistencia|fkq04ajsgf4iqicxnc2s0ysneb3|f|true|FOREIGN KEY (usuario_id) REFERENCES usuario(id)
+CON|auditoria|auditoria_pkey|p|true|PRIMARY KEY (id)
+CON|categoria|categoria_pkey|p|true|PRIMARY KEY (id)
+CON|clientes|clientes_pkey|p|true|PRIMARY KEY (id)
+CON|configuracion_sistema|configuracion_sistema_pkey|p|true|PRIMARY KEY (id)
+CON|corte_caja|corte_caja_pkey|p|true|PRIMARY KEY (id)
+CON|corte_caja|fk6grf12ibwefsec9ed7qd53ad9|f|true|FOREIGN KEY (usuario_id) REFERENCES usuario(id)
+CON|gastos|fkblvcrmk9ped3jdwfh4y4u8u5e|f|true|FOREIGN KEY (usuario_id) REFERENCES usuario(id)
+CON|gastos|gastos_pkey|p|true|PRIMARY KEY (id)
+CON|insumo|fk7pfmw5wop41sal3595f572dkg|f|true|FOREIGN KEY (categoria_id) REFERENCES categoria(id)
+CON|insumo|fkmsmbrf64upncu8ieylvsb70r6|f|true|FOREIGN KEY (proveedor_id) REFERENCES proveedor(id)
+CON|insumo|insumo_costo_unitario_check|c|true|CHECK (costo_unitario >= 0::numeric)
+CON|insumo|insumo_pkey|p|true|PRIMARY KEY (id)
+CON|insumo|insumo_stock_actual_check|c|true|CHECK (stock_actual >= 0::numeric)
+CON|insumo|insumo_stock_minimo_check|c|true|CHECK (stock_minimo >= 0::numeric)
+CON|mesas|fkdcjhy2o0xe0sri4pc22y3l47c|f|true|FOREIGN KEY (venta_id) REFERENCES ventas(id)
+CON|mesas|mesas_pkey|p|true|PRIMARY KEY (id)
+CON|mesas|uk_j0e0hutvqcecq56ogqll8feqw|u|true|UNIQUE (numero)
+CON|movimiento_inventario|fkak0jo2lutflqsuxblfg9rlia4|f|true|FOREIGN KEY (insumo_id) REFERENCES insumo(id)
+CON|movimiento_inventario|fkt6p6ejpbblav1phv0lgjpeg4r|f|true|FOREIGN KEY (usuario_id) REFERENCES usuario(id)
+CON|movimiento_inventario|movimiento_inventario_pkey|p|true|PRIMARY KEY (id)
+CON|producto|fkbhaxjy3ysjchd9ol8m3lm0au5|f|true|FOREIGN KEY (insumo_reventa_id) REFERENCES insumo(id)
+CON|producto|fkodqr7965ok9rwquj1utiamt0m|f|true|FOREIGN KEY (categoria_id) REFERENCES categoria(id)
+CON|producto|producto_pkey|p|true|PRIMARY KEY (id)
+CON|producto|producto_precio_venta_check|c|true|CHECK (precio_venta >= 0::numeric)
+CON|proveedor|proveedor_pkey|p|true|PRIMARY KEY (id)
+CON|receta|fkmxpgqwk8neoqbb3y97re8hj4w|f|true|FOREIGN KEY (insumo_id) REFERENCES insumo(id)
+CON|receta|fkqha3n6kdoytu44l80aljm5lur|f|true|FOREIGN KEY (producto_id) REFERENCES producto(id)
+CON|receta|receta_pkey|p|true|PRIMARY KEY (id)
+CON|reservas|fkk33nidm20a0k0ssnyjfjmnnnp|f|true|FOREIGN KEY (mesa_id) REFERENCES mesas(id)
+CON|reservas|fkpays115gahfu3ffuywded1xqt|f|true|FOREIGN KEY (cliente_id) REFERENCES clientes(id)
+CON|reservas|reservas_pkey|p|true|PRIMARY KEY (id)
+CON|sub_receta|fk7enhp8fj5pa6ww5ktnncjrsk3|f|true|FOREIGN KEY (ingrediente_id) REFERENCES insumo(id)
+CON|sub_receta|fkiog7t11b9khcsjwyaqrt1wxje|f|true|FOREIGN KEY (insumo_destino_id) REFERENCES insumo(id)
+CON|sub_receta|sub_receta_pkey|p|true|PRIMARY KEY (id)
+CON|usuario|uk_863n1y3x0jalatoir4325ehal|u|true|UNIQUE (username)
+CON|usuario|usuario_pkey|p|true|PRIMARY KEY (id)
+CON|venta_detalles|fk6oe5rpuq8yx6emqvsfb50nipb|f|true|FOREIGN KEY (venta_id) REFERENCES ventas(id)
+CON|venta_detalles|fkjsqctj8rb4ii6fkx7v1i947px|f|true|FOREIGN KEY (producto_id) REFERENCES producto(id)
+CON|venta_detalles|venta_detalles_pkey|p|true|PRIMARY KEY (id)
+CON|ventas|fk4dgjhccl2uuo8swmxlxb4ipb5|f|true|FOREIGN KEY (cliente_id) REFERENCES clientes(id)
+CON|ventas|fk7q90tuwecmnx8c26jkx4vm9wt|f|true|FOREIGN KEY (mesa_id) REFERENCES mesas(id)
+CON|ventas|fkn7rj3vt9pew8ahxt4f0qn9f6y|f|true|FOREIGN KEY (usuario_id) REFERENCES usuario(id)
+CON|ventas|ventas_pkey|p|true|PRIMARY KEY (id)
+DB|UTF8|en_US.utf8|en_US.utf8
+IDX|asistencia|asistencia_pkey|CREATE UNIQUE INDEX asistencia_pkey ON public.asistencia USING btree (id)
+IDX|auditoria|auditoria_pkey|CREATE UNIQUE INDEX auditoria_pkey ON public.auditoria USING btree (id)
+IDX|categoria|categoria_pkey|CREATE UNIQUE INDEX categoria_pkey ON public.categoria USING btree (id)
+IDX|clientes|clientes_pkey|CREATE UNIQUE INDEX clientes_pkey ON public.clientes USING btree (id)
+IDX|configuracion_sistema|configuracion_sistema_pkey|CREATE UNIQUE INDEX configuracion_sistema_pkey ON public.configuracion_sistema USING btree (id)
+IDX|corte_caja|corte_caja_pkey|CREATE UNIQUE INDEX corte_caja_pkey ON public.corte_caja USING btree (id)
+IDX|gastos|gastos_pkey|CREATE UNIQUE INDEX gastos_pkey ON public.gastos USING btree (id)
+IDX|insumo|insumo_pkey|CREATE UNIQUE INDEX insumo_pkey ON public.insumo USING btree (id)
+IDX|mesas|mesas_pkey|CREATE UNIQUE INDEX mesas_pkey ON public.mesas USING btree (id)
+IDX|mesas|uk_j0e0hutvqcecq56ogqll8feqw|CREATE UNIQUE INDEX uk_j0e0hutvqcecq56ogqll8feqw ON public.mesas USING btree (numero)
+IDX|movimiento_inventario|movimiento_inventario_pkey|CREATE UNIQUE INDEX movimiento_inventario_pkey ON public.movimiento_inventario USING btree (id)
+IDX|producto|producto_pkey|CREATE UNIQUE INDEX producto_pkey ON public.producto USING btree (id)
+IDX|proveedor|proveedor_pkey|CREATE UNIQUE INDEX proveedor_pkey ON public.proveedor USING btree (id)
+IDX|receta|receta_pkey|CREATE UNIQUE INDEX receta_pkey ON public.receta USING btree (id)
+IDX|reservas|reservas_pkey|CREATE UNIQUE INDEX reservas_pkey ON public.reservas USING btree (id)
+IDX|sub_receta|sub_receta_pkey|CREATE UNIQUE INDEX sub_receta_pkey ON public.sub_receta USING btree (id)
+IDX|usuario|uk_863n1y3x0jalatoir4325ehal|CREATE UNIQUE INDEX uk_863n1y3x0jalatoir4325ehal ON public.usuario USING btree (username)
+IDX|usuario|usuario_pkey|CREATE UNIQUE INDEX usuario_pkey ON public.usuario USING btree (id)
+IDX|venta_detalles|venta_detalles_pkey|CREATE UNIQUE INDEX venta_detalles_pkey ON public.venta_detalles USING btree (id)
+IDX|ventas|ventas_pkey|CREATE UNIQUE INDEX ventas_pkey ON public.ventas USING btree (id)
+REL|asistencia_id_seq|S
+REL|asistencia|r
+REL|auditoria_id_seq|S
+REL|auditoria|r
+REL|categoria_id_seq|S
+REL|categoria|r
+REL|clientes_id_seq|S
+REL|clientes|r
+REL|configuracion_sistema|r
+REL|corte_caja_id_seq|S
+REL|corte_caja|r
+REL|gastos_id_seq|S
+REL|gastos|r
+REL|insumo_id_seq|S
+REL|insumo|r
+REL|mesas_id_seq|S
+REL|mesas|r
+REL|movimiento_inventario_id_seq|S
+REL|movimiento_inventario|r
+REL|producto_id_seq|S
+REL|producto|r
+REL|proveedor_id_seq|S
+REL|proveedor|r
+REL|receta_id_seq|S
+REL|receta|r
+REL|reservas_id_seq|S
+REL|reservas|r
+REL|sub_receta_id_seq|S
+REL|sub_receta|r
+REL|usuario_id_seq|S
+REL|usuario|r
+REL|venta_detalles_id_seq|S
+REL|venta_detalles|r
+REL|ventas_id_seq|S
+REL|ventas|r
+SEQ|asistencia_id_seq|bigint|1|1|1|9223372036854775807|1|false|asistencia.id
+SEQ|auditoria_id_seq|bigint|1|1|1|9223372036854775807|1|false|auditoria.id
+SEQ|categoria_id_seq|bigint|1|1|1|9223372036854775807|1|false|categoria.id
+SEQ|clientes_id_seq|bigint|1|1|1|9223372036854775807|1|false|clientes.id
+SEQ|corte_caja_id_seq|bigint|1|1|1|9223372036854775807|1|false|corte_caja.id
+SEQ|gastos_id_seq|bigint|1|1|1|9223372036854775807|1|false|gastos.id
+SEQ|insumo_id_seq|bigint|1|1|1|9223372036854775807|1|false|insumo.id
+SEQ|mesas_id_seq|bigint|1|1|1|9223372036854775807|1|false|mesas.id
+SEQ|movimiento_inventario_id_seq|bigint|1|1|1|9223372036854775807|1|false|movimiento_inventario.id
+SEQ|producto_id_seq|bigint|1|1|1|9223372036854775807|1|false|producto.id
+SEQ|proveedor_id_seq|bigint|1|1|1|9223372036854775807|1|false|proveedor.id
+SEQ|receta_id_seq|bigint|1|1|1|9223372036854775807|1|false|receta.id
+SEQ|reservas_id_seq|bigint|1|1|1|9223372036854775807|1|false|reservas.id
+SEQ|sub_receta_id_seq|bigint|1|1|1|9223372036854775807|1|false|sub_receta.id
+SEQ|usuario_id_seq|bigint|1|1|1|9223372036854775807|1|false|usuario.id
+SEQ|venta_detalles_id_seq|bigint|1|1|1|9223372036854775807|1|false|venta_detalles.id
+SEQ|ventas_id_seq|bigint|1|1|1|9223372036854775807|1|false|ventas.id
+TYPE|asistencia|c|asistencia
+TYPE|auditoria|c|auditoria
+TYPE|categoria|c|categoria
+TYPE|clientes|c|clientes
+TYPE|configuracion_sistema|c|configuracion_sistema
+TYPE|corte_caja|c|corte_caja
+TYPE|gastos|c|gastos
+TYPE|insumo|c|insumo
+TYPE|mesas|c|mesas
+TYPE|movimiento_inventario|c|movimiento_inventario
+TYPE|producto|c|producto
+TYPE|proveedor|c|proveedor
+TYPE|receta|c|receta
+TYPE|reservas|c|reservas
+TYPE|sub_receta|c|sub_receta
+TYPE|usuario|c|usuario
+TYPE|venta_detalles|c|venta_detalles
+TYPE|ventas|c|ventas

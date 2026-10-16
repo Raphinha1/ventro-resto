@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<style>
+        .main-content { margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 4rem 2rem; }
+        .card-form { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 2.5rem; width: 100%; max-width: 800px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .btn-submit { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border: none; color: #fff; border-radius: 12px; padding: 0.9rem; font-weight: 700; font-size: 1rem; width: 100%; box-shadow: 0 4px 15px rgba(42,182,161,0.3); transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; cursor: pointer; }
+        .btn-submit:hover { transform: translateY(-1px); color: white;}
+        .form-control, .form-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 10px; padding: 0.75rem 1rem; }
+        .form-control:focus, .form-select:focus { background: rgba(255,255,255,0.08); border-color: var(--primary); color: #fff; box-shadow: 0 0 0 0.25rem rgba(42,182,161,0.2); }
+        .form-label { color: #A2A8BA; font-size: 0.72rem; text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem; display: block; letter-spacing: 0.05em;}
+        option { background-color: #1A1D2E; color: #E8EAF0; }
+        .btn-cancel { background:rgba(255,255,255,0.05); color:#fff; border-radius:12px; padding:.9rem 1.5rem; font-weight:600; display: inline-flex; align-items: center; transition: all 0.2s; text-decoration: none; border: none; }
+        .btn-cancel:hover { background:rgba(255,255,255,0.1); color:#fff; }
+        .table-custom { --bs-table-bg: transparent; --bs-table-color: var(--text-main); color: var(--text-main); border-color: var(--border); margin-top: 1.5rem; margin-bottom: 0; }
+        .table-custom thead th { background: rgba(255,255,255,.04) !important; color: rgba(255,255,255,.5); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); border-top: 1px solid var(--border); }
+        .table-custom tbody td { padding: 0.85rem 1rem; vertical-align: middle; border-bottom: 1px solid var(--border); background: transparent !important; color: var(--text-main); font-size: 0.9rem; }
+        .badge-info { background: rgba(59,130,246,0.15); color: #60a5fa; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; border: 1px solid rgba(59,130,246,0.2); display: flex; align-items: center; gap: 0.5rem;}
+    </style>
+<main class="main-content">
+    <div class="card-form">
+        <!-- Título -->
+        <div class="text-center mb-4">
+            <div style="font-size:3rem; margin-bottom:.5rem;">🍲</div>
+            <h2 class="fw-bold mb-1" th:text="'Receta: ' + ${producto.nombre}">Platillo</h2>
+            <p style="color:var(--text-muted); font-size:.85rem;">Estructura de costos e insumos (Escandallo)</p>
+        </div>
+
+        <div th:if="${mensajeExito}" class="alert alert-success" style="border-radius: 12px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: #34d399;" th:text="${mensajeExito}"></div>
+        <div th:if="${mensajeError}" class="alert alert-danger" style="border-radius: 12px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #f87171;" th:text="${mensajeError}"></div>
+
+        <!-- Indicadores Financieros -->
+        <div class="d-flex flex-wrap justify-content-center gap-3 mb-5 mt-2">
+            <div class="badge-info">
+                <i class="bi bi-tag-fill"></i> P. Venta Sugerido: <span style="color:#fff;" th:text="'$' + ${producto.precioVenta}">0.00</span>
+            </div>
+            <div class="badge-info" style="background: rgba(245,158,11,0.1); color: #f59e0b; border-color: rgba(245,158,11,0.2);">
+                <i class="bi bi-calculator-fill"></i> Costo Producción: <span style="color:#fff;" th:text="'$' + ${costoProduccion}">0.00</span>
+            </div>
+            <div th:class="${(producto.precioVenta - costoProduccion) > 0 ? 'badge-info' : 'badge-info bg-danger-subtle text-danger'}" 
+                 style="background: rgba(16,185,129,0.1); color: #34d399; border-color: rgba(16,185,129,0.2);">
+                <i class="bi bi-graph-up-arrow"></i> Margen: <span style="color:#fff;" th:text="'$' + (${#numbers.formatDecimal(producto.precioVenta - costoProduccion, 1, 2)})">0.00</span>
+            </div>
+        </div>
+
+        <h5 class="mb-3" style="font-weight: 700; font-size: 1.1rem;"><i class="bi bi-plus-circle-fill me-2" style="color:var(--primary);"></i>Añadir Insumo a la Receta</h5>
+        <form th:action="@{/recetas/agregar}" th:object="${receta}" method="post" class="row g-3 align-items-end mb-5 p-4" style="background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+            <input type="hidden" th:field="*{producto.id}">
+            
+            <div class="col-md-5">
+                <label class="form-label">Ingrediente / Insumo</label>
+                <select th:field="*{insumo}" class="form-select" required>
+                    <option value="">Buscar en Inventario...</option>
+                    <option th:each="ins : ${insumos}" th:value="${ins.id}" 
+                            th:text="${ins.nombre} + ' (' + ${ins.unidadMedida} + ' - Costo: $' + ${ins.costoUnitario} + ')'"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Cantidad</label>
+                <input type="number" step="0.0001" th:field="*{cantidad}" class="form-control" placeholder="0.25" required>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn-submit" style="padding: 0.75rem;">
+                    <i class="bi bi-plus-lg"></i> Añadir a Receta
+                </button>
+            </div>
+        </form>
+
+        <h5 class="mb-0" style="font-weight: 700; font-size: 1.1rem;"><i class="bi bi-list-ul me-2 text-info"></i>Composición de la Receta</h5>
+        <div class="table-responsive">
+            <table class="table table-custom">
+                <thead>
+                    <tr>
+                        <th style="border-top-left-radius: 10px;">Insumo</th>
+                        <th>Cantidad Requerida</th>
+                        <th>Costo Parcial</th>
+                        <th class="text-center" style="border-top-right-radius: 10px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="rec: ${producto.ingredientes}">
+                        <td class="fw-bold" style="color:#fff;" th:text="${rec.insumo.nombre}">Tomate</td>
+                        <td th:text="${rec.cantidad} + ' ' + ${rec.insumo.unidadMedida}">0.5 Kg</td>
+                        <td style="color: #34d399; font-weight: 600;" th:text="'$' + (${#numbers.formatDecimal(rec.cantidad * rec.insumo.costoUnitario, 1, 2)})">$5.00</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-danger border-0"
+                                    style="border-radius: 8px;"
+                                    th:data-id="${rec.id}"
+                                    th:data-nombre="${rec.insumo.nombre}"
+                                    onclick="abrirModalEliminar(this)">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(producto.ingredientes)}">
+                        <td colspan="4" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                            Aún no has añadido ingredientes a esta receta.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-center mt-5">
+            <a th:href="@{/productos}" class="btn-cancel" style="padding: 0.8rem 2rem;">
+                <i class="bi bi-arrow-left me-2"></i> Volver al Menú
+            </a>
+        </div>
+    </div>
+</main>
+
+<form id="formEliminar" method="post" th:action="@{/recetas/eliminar/0}">
+    <input type="hidden" name="productoId" th:value="${producto.id}" />
+</form>
+
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1A1D2E;border:1px solid rgba(255,255,255,0.1);border-radius:16px">
+            <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.08)">
+                <h5 class="modal-title" style="color:#fff"><i class="bi bi-exclamation-triangle-fill me-2" style="color:#ff7e7e"></i>Confirmar</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="color:rgba(255,255,255,0.7)">
+                ¿Deseas quitar el ingrediente <strong id="nombreReceta" style="color:#fff"></strong> de la receta?
+            </div>
+            <div class="modal-footer" style="border-top:1px solid rgba(255,255,255,0.08)">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn" id="btnConfirmarEliminar"
+                        style="background:linear-gradient(135deg,#1E8E7C,#c23d16);color:#fff;border:none;border-radius:8px;padding:.5rem 1.2rem;font-weight:600">
+                    <i class="bi bi-trash3-fill me-1"></i>Quitar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalEliminar(btn) {
+        const id     = btn.dataset.id;
+        const nombre = btn.dataset.nombre;
+        document.getElementById('nombreReceta').textContent = nombre;
+        document.getElementById('formEliminar').action = '/recetas/eliminar/' + id;
+        const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+        document.getElementById('btnConfirmarEliminar').onclick = function() {
+            document.getElementById('formEliminar').submit();
+        };
+        modal.show();
+    }
+</script>
+</body>
+</html>

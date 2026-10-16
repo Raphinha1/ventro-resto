@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<main class="main-content receipt-page">
+<link rel="stylesheet" th:href="@{/css/receipts.css}">
+<header class="page-header receipt-toolbar"><h1>Historial de recepciones</h1><a th:href="@{/inventario/recepciones/nueva}">Nueva recepción</a></header>
+<form method="get" th:action="@{/inventario/recepciones}" class="receipt-toolbar">
+    <label for="filter-request">Buscar intento (UUID)</label><input id="filter-request" name="requestId" th:value="${requestId}" class="form-control">
+    <button class="btn btn-outline-light">Buscar</button><a th:href="@{/inventario/recepciones}">Ver todas</a>
+</form>
+<p>Solo lectura. El detalle permite verificar referencias causales; una búsqueda vacía no prueba que un envío en curso haya fallado.</p>
+<article th:each="r : ${receipts.content}" class="card-custom receipt-line">
+    <h2><a th:href="@{/inventario/recepciones/{id}(id=${r.id})}" th:text="${'Recepción #' + r.id}"></a></h2>
+    <p>Estado: <strong th:text="${r.estado}"></strong> · <a th:if="${r.reversal_id != null}" th:href="@{/inventario/recepciones/{id}/reversos/{reversalId}(id=${r.id},reversalId=${r.reversal_id})}">Ver reverso auditado</a></p>
+    <p th:text="${r.registrado_en + ' · ' + r.actor}"></p>
+    <p th:text="${r.costo + ' ' + r.moneda + ' · ' + (r.proveedor != null ? r.proveedor : 'Sin proveedor')}"></p>
+    <p th:text="${r.documento_externo != null ? r.documento_externo : 'Sin documento'}"></p>
+    <p class="receipt-reference" th:text="${r.request_id}"></p>
+</article>
+<p th:if="${receipts.empty}">No hay recepciones para esta búsqueda.</p>
+<nav aria-label="Páginas de recepciones" class="receipt-toolbar">
+<a th:if="${receipts.hasPrevious()}" th:href="@{/inventario/recepciones(page=${receipts.number-1},requestId=${requestId})}">Anterior</a>
+<span th:text="${'Página ' + (receipts.number+1)}"></span>
+<a th:if="${receipts.hasNext()}" th:href="@{/inventario/recepciones(page=${receipts.number+1},requestId=${requestId})}">Siguiente</a>
+</nav>
+</main></body></html>

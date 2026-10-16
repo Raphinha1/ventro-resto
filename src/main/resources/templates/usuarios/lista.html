@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{base :: header}"></head>
+<body th:replace="~{base :: layout(~{::body/content()})}">
+<main class="main-content">
+    <div class="page-header d-flex align-items-center justify-content-between">
+        <div>
+            <h1><i class="bi bi-people-fill me-2" style="color:var(--primary)"></i><span th:text="${titulo}">Gestión de Usuarios</span></h1>
+            <p style="color:var(--text-muted);font-size:.85rem;margin:0">Administra los usuarios con acceso al sistema</p>
+        </div>
+        <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#modalUsuario" onclick="abrirModalNuevo()">
+            <i class="bi bi-plus-lg me-1"></i> Nuevo Usuario
+        </button>
+    </div>
+
+    <div th:if="${mensajeExito}" class="alerta-exito"><i class="bi bi-check-circle-fill me-2"></i><span th:text="${mensajeExito}"></span></div>
+    <div th:if="${mensajeError}" class="alerta-error"><i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${mensajeError}"></span></div>
+
+    <div class="card-custom">
+        <div th:if="${#lists.isEmpty(usuarios)}" class="empty-state">
+            <div class="empty-icon">👥</div>
+            <h5 style="color:rgba(255,255,255,.6)">No hay usuarios registrados</h5>
+            <p style="font-size:.85rem">Crea el primer usuario usando el botón superior.</p>
+        </div>
+        <div th:unless="${#lists.isEmpty(usuarios)}">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <span style="font-size:.82rem;color:var(--text-muted)">Total: <strong th:text="${#lists.size(usuarios)}" style="color:#fff">0</strong> usuarios</span>
+            </div>
+            <div class="table-responsive">
+            <table class="table table-custom table-borderless">
+                <thead>
+                    <tr>
+                        <th class="d-none d-md-table-cell">#ID</th><th>Nombre Completo</th><th class="d-none d-md-table-cell">Username</th><th>Rol</th><th>Estado</th><th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${usuarios}" th:style="${u.activo ? '' : 'opacity: 0.6;'}">
+                        <td class="d-none d-md-table-cell"><span class="badge-id" th:text="'#' + ${u.id}">#1</span></td>
+                        <td><strong th:text="${u.nombreCompleto}">Nombre</strong></td>
+                        <td class="d-none d-md-table-cell"><span style="color:rgba(255,255,255,0.7);font-size:.85rem" th:text="'@' + ${u.username}">@user</span></td>
+                        <td>
+                            <span th:class="${u.rol == 'ROLE_ADMIN' ? 'badge-rol badge-admin' : (u.rol == 'ROLE_GERENTE' ? 'badge-rol badge-gerente' : 'badge-rol badge-empleado')}"
+                                  th:text="${u.rol.replace('ROLE_', '')}">ROL</span>
+                        </td>
+                        <td>
+                            <span th:if="${u.activo}" class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.65rem;">ACTIVO</span>
+                            <span th:unless="${u.activo}" class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size: 0.65rem;">INACTIVO</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-2 justify-content-center" th:if="${u.rol != 'ROLE_SUPER_ADMIN' or #authorization.expression('hasRole(''SUPER_ADMIN'')')}">
+                                <button type="button" class="btn-sm-icon editar" title="Editar usuario"
+                                         th:data-id="${u.id}"
+                                         th:data-username="${u.username}"
+                                         th:data-nombre="${u.nombreCompleto}"
+                                         th:data-rol="${u.rol}"
+                                         th:data-pin-configurado="${u.pinDigest != null}"
+                                         th:data-activo="${u.activo}"
+                                         onclick="abrirModalEditar(this)">
+                                     <i class="bi bi-pencil-fill"></i>
+                                 </button>
+                                 <button th:if="${u.activo}" type="button" class="btn-sm-icon eliminar" title="Eliminar usuario"
+                                         th:data-id="${u.id}" th:data-nombre="${u.username}"
+                                         onclick="abrirModalEliminar(this)">
+                                     <i class="bi bi-trash3-fill"></i>
+                                 </button>
+                            </div>
+                            <div th:if="${u.rol == 'ROLE_SUPER_ADMIN' and !#authorization.expression('hasRole(''SUPER_ADMIN'')')}">
+                                <span class="badge rounded-pill bg-dark text-muted" style="font-size: 0.65rem;">Soporte Maestro</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+    .alerta-exito{background:rgba(25,135,84,0.2);color:#6ee7b4;border:none;border-radius:12px;padding:.85rem 1.25rem;margin-bottom:1.5rem}
+    .alerta-error{background:rgba(220,53,69,0.2);color:#ff9ca6;border:none;border-radius:12px;padding:.85rem 1.25rem;margin-bottom:1.5rem}
+    .badge-id{background:rgba(42,182,161,.12);color:var(--primary);padding:.25rem .6rem;border-radius:6px;font-size:.75rem;font-weight:600}
+    .badge-rol{padding:.35rem .65rem;border-radius:6px;font-size:.7rem;font-weight:600;letter-spacing:.05em}
+    .badge-admin{background:rgba(220,53,69,.15);color:#ff7e7e;border:1px solid rgba(220,53,69,.3)}
+    .badge-gerente{background:rgba(255,193,7,.15);color:#ffd54f;border:1px solid rgba(255,193,7,.3)}
+    .badge-empleado{background:rgba(25,135,84,.15);color:#6ee7b4;border:1px solid rgba(25,135,84,.3)}
+    .btn-sm-icon{width:32px;height:32px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border);font-size:0.9rem;transition:all 0.15s;cursor:pointer;background:transparent}
+    .btn-sm-icon.editar{background:rgba(78,149,255,0.1);color:#4e95ff;border-color:rgba(78,149,255,0.2)}
+    .btn-sm-icon.editar:hover{background:rgba(78,149,255,0.2);border-color:#4e95ff}
+    .btn-sm-icon.eliminar{background:rgba(255,126,126,0.1);color:#ff7e7e;border-color:rgba(255,126,126,0.2)}
+    .btn-sm-icon.eliminar:hover{background:rgba(255,126,126,0.2);border-color:#ff7e7e}
+</style>
+
+<!-- =========== MODAL CREAR / EDITAR USUARIO =========== -->
+<div class="modal fade" id="modalUsuario" tabindex="-1" style="backdrop-filter: blur(5px);">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:560px;">
+        <div class="modal-content" style="background:rgba(26,29,46,0.92);border:1px solid rgba(255,255,255,0.09);border-radius:28px;box-shadow:0 32px 64px rgba(0,0,0,0.55);">
+            <div class="modal-header border-0 px-4 pt-4 pb-0">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:42px;height:42px;background:rgba(42,182,161,0.15);border:1px solid rgba(42,182,161,0.25);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--primary);font-size:1.2rem;">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="modalUsuarioTitulo">Nuevo Usuario</h5>
+                        <div style="font-size:.78rem;color:var(--text-muted);">Acceso y rol en el sistema</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white opacity-50 ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form id="formUsuario" th:action="@{/usuarios/guardar}" method="post">
+                <input type="hidden" id="usuarioId" name="id">
+                <div class="modal-body px-4 py-4">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Username <span style="color:var(--primary)">*</span></label>
+                            <input type="text" id="usuarioUsername" name="username" class="form-control" placeholder="ej: mario.perez" autocomplete="off" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label-custom">Nombre Completo <span style="color:var(--primary)">*</span></label>
+                            <input type="text" id="usuarioNombre" name="nombreCompleto" class="form-control" placeholder="ej: Mario Pérez" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-custom">Rol del Sistema</label>
+                        <select id="usuarioRol" name="rol" class="form-select">
+                            <option sec:authorize="hasRole('SUPER_ADMIN')" value="ROLE_SUPER_ADMIN">👑 Super Administrador (Maestro)</option>
+                            <option value="ROLE_ADMIN">Administrador (Control total)</option>
+                            
+                            <!-- Roles condicionales -->
+                            <option value="ROLE_EMPLEADO" th:if="${config.nivelPlan == 'LITE'}">Cajero / Operador de Ventas</option>
+                            
+                            <option value="ROLE_GERENTE" th:if="${config.nivelPlan != 'LITE'}">Gerente (Supervisión y Finanzas)</option>
+                            <option value="ROLE_MESERO" th:if="${config.nivelPlan != 'LITE'}">Mesero (POS y Comandas)</option>
+                            <option value="ROLE_COCINERO" th:if="${config.nivelPlan == 'PRO' or config.nivelPlan == 'PREMIUM' or (config.nivelPlan == 'CUSTOM' and config.modKds)}">Cocinero (Monitor KDS)</option>
+                            <option value="ROLE_EMPLEADO" th:if="${config.nivelPlan != 'LITE'}">Empleado (Auxiliar)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-custom" id="labelPassword">
+                            Contraseña <span style="color:var(--primary)" id="pwRequired">*</span>
+                            <span id="pwOptional" class="d-none" style="color:var(--text-muted);font-weight:400;font-size:.78rem;text-transform:none"> — Deja en blanco para no cambiar</span>
+                        </label>
+                        <input type="password" id="usuarioPassword" name="password" class="form-control" placeholder="••••••••">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-custom">Nuevo PIN de Asistencia</label>
+                        <input type="password" id="usuarioPin" name="pinNuevo" class="form-control" placeholder="4 a 6 dígitos" maxlength="6" pattern="[0-9]{4,6}" inputmode="numeric" autocomplete="new-password" title="Debe contener entre 4 y 6 dígitos">
+                        <small id="pinAyuda" style="color:rgba(255,255,255,0.5); font-size: 0.75rem;">Para el reloj de entrada/salida (4-6 dígitos).</small>
+                        <div id="revocarPinControl" class="form-check mt-2 d-none">
+                            <input type="checkbox" id="revocarPin" name="revocarPin" value="true" class="form-check-input">
+                            <label for="revocarPin" class="form-check-label">Revocar PIN actual</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch d-flex align-items-center gap-2">
+                            <input class="form-check-input" type="checkbox" role="switch" id="usuarioActivo" name="activo" style="width:2.5rem;height:1.2rem;cursor:pointer;" checked>
+                            <label class="form-check-label text-white mb-0" for="usuarioActivo">Usuario Activo</label>
+                        </div>
+                        <small style="color:rgba(255,255,255,0.5); font-size: 0.75rem;">Si se desactiva, el usuario no podrá iniciar sesión.</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-0 d-flex gap-2">
+                    <button type="button" class="btn-form-cancel" data-bs-dismiss="modal"><i class="bi bi-x-lg"></i> Cancelar</button>
+                    <button type="submit" class="btn-form-submit flex-grow-1">
+                        <i class="bi bi-save"></i> <span id="btnUsuarioLabel">Crear Usuario</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Eliminar -->
+<form id="formEliminar" method="post" th:action="@{/usuarios/eliminar/0}">
+    <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+</form>
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:#1A1D2E;border:1px solid rgba(255,255,255,0.1);border-radius:16px">
+            <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.08)">
+                <h5 class="modal-title" style="color:#fff"><i class="bi bi-exclamation-triangle-fill me-2" style="color:#ff7e7e"></i>Confirmar eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="color:rgba(255,255,255,0.7)">
+                ¿Eliminar al usuario <strong id="nombreUsuario" style="color:#fff"></strong>?
+                <p class="mt-2 mb-0" style="font-size:.82rem;color:rgba(255,255,255,.4)">Perderá el acceso de inmediato. Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer" style="border-top:1px solid rgba(255,255,255,0.08)">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn" id="btnConfirmarEliminar"
+                        style="background:linear-gradient(135deg,#1E8E7C,#c23d16);color:#fff;border:none;border-radius:8px;padding:.5rem 1.2rem;font-weight:600">
+                    <i class="bi bi-trash3-fill me-1"></i>Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalNuevo() {
+        document.getElementById('modalUsuarioTitulo').textContent = 'Nuevo Usuario';
+        document.getElementById('btnUsuarioLabel').textContent = 'Crear Usuario';
+        document.getElementById('formUsuario').action = '/usuarios/guardar';
+        document.getElementById('usuarioId').value = '';
+        document.getElementById('usuarioUsername').value = '';
+        document.getElementById('usuarioNombre').value = '';
+        document.getElementById('usuarioRol').value = 'ROLE_EMPLEADO';
+        document.getElementById('usuarioPassword').value = '';
+        document.getElementById('usuarioPassword').name = 'password';
+        document.getElementById('usuarioPassword').required = true;
+        document.getElementById('usuarioPin').value = '';
+        document.getElementById('pinAyuda').textContent = 'Para el reloj de entrada/salida (4-6 dígitos).';
+        document.getElementById('revocarPin').checked = false;
+        document.getElementById('revocarPinControl').classList.add('d-none');
+        document.getElementById('usuarioActivo').checked = true;
+        document.getElementById('pwRequired').classList.remove('d-none');
+        document.getElementById('pwOptional').classList.add('d-none');
+    }
+    function abrirModalEditar(btn) {
+        document.getElementById('modalUsuarioTitulo').textContent = 'Editar Usuario';
+        document.getElementById('btnUsuarioLabel').textContent = 'Guardar Cambios';
+        document.getElementById('formUsuario').action = '/usuarios/actualizar';
+        document.getElementById('usuarioId').value = btn.dataset.id;
+        document.getElementById('usuarioUsername').value = btn.dataset.username;
+        document.getElementById('usuarioNombre').value = btn.dataset.nombre;
+        document.getElementById('usuarioRol').value = btn.dataset.rol;
+        document.getElementById('usuarioPassword').value = '';
+        document.getElementById('usuarioPassword').name = 'nuevaPassword';
+        document.getElementById('usuarioPassword').required = false;
+        document.getElementById('usuarioPin').value = '';
+        document.getElementById('pinAyuda').textContent = btn.dataset.pinConfigurado === 'true'
+            ? 'PIN configurado. Deja el campo vacío para conservarlo o escribe uno nuevo.'
+            : 'Sin PIN configurado. Escribe uno nuevo para habilitar el reloj.';
+        document.getElementById('revocarPin').checked = false;
+        document.getElementById('revocarPinControl').classList.toggle('d-none', btn.dataset.pinConfigurado !== 'true');
+        document.getElementById('usuarioActivo').checked = btn.dataset.activo === 'true';
+        document.getElementById('pwRequired').classList.add('d-none');
+        document.getElementById('pwOptional').classList.remove('d-none');
+        new bootstrap.Modal(document.getElementById('modalUsuario')).show();
+    }
+    function abrirModalEliminar(btn) {
+        document.getElementById('nombreUsuario').textContent = '@' + btn.dataset.nombre;
+        document.getElementById('formEliminar').action = '/usuarios/eliminar/' + btn.dataset.id;
+        const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+        document.getElementById('btnConfirmarEliminar').onclick = () => document.getElementById('formEliminar').submit();
+        modal.show();
+    }
+</script>
+</body>
+</html>
